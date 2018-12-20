@@ -1,0 +1,25 @@
+{
+  "name": "tabstops",
+  "description": "My awesome node.js project",
+  "version": "0.1.0",
+  "homepage": "https://github.com/jonschlinkert/tabstops",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/tabstops",
+  "bugs": {
+    "url": "https://github.com/jonschlinkert/tabstops/issues"
+  },
+  "engines": {
+    "node": ">=8"
+  },
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "tabstop",
+    "tabstops"
+  ],
+  "dependencies": {
+    "snapdragon-lexer": "^4.0.0"
+  }
+}
