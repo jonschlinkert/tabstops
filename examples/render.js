@@ -5,6 +5,7 @@ process.on('exit', () => console.timeEnd('total'));
 
 const path = require('path');
 const colors = require('ansi-colors');
+const helpers = require('./support/helpers');
 const render = require('../lib/render');
 const parse = require('../lib/parse');
 
@@ -29,12 +30,6 @@ let pkg = `{
   "keywords": \${10:keywords},
   "almost_a_template": "{{{$}}}"
 }`;
-
-const helpers = {
-  keywords(value) {
-    return '["' + value.split(/,\s*/).join('", "') + '"]';
-  }
-};
 
 const data = {
   name: 'assemble',

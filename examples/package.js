@@ -5,7 +5,8 @@ process.on('exit', () => console.timeEnd('total'));
 
 const path = require('path');
 const colors = require('ansi-colors');
-const Compiler = require('../lib/compiler');
+const helpers = require('./support/helpers');
+const compile = require('../lib/compile');
 const utils = require('../lib/utils');
 const parse = require('../lib/parse');
 
@@ -47,87 +48,8 @@ let pkg = `{
 // homepage_pathname
 // homepage = ${homepage_protocol}://${homepage_hostname=repository_owner}/${homepage_path}
 
-
-let compiler = new Compiler();
-let isValue = val => val != null && val !== '';
-
-compiler.handler('open', () => {});
-compiler.handler('close', () => {});
-compiler.handler('text', node => node.value);
-compiler.handler('template', (node, context) => {
-  if (node.render === false) {
-    delete node.render;
-    return '';
-  }
-  return compiler.mapVisit(node.nodes, context);
-});
-
-compiler.handler('variable', (node, context = {}) => {
-  let idx = node.parent.nodes.indexOf(node);
-  let nextSibling = node.parent.nodes[idx + 1];
-  let nextValue;
-
-  if (nextSibling && nextSibling.type === 'template') {
-    nextValue = compiler.visit(nextSibling, context);
-    nextSibling.render = false;
-
-    if (isValue(nextValue, node)) {
-      nextValue = colors.yellow(colors.unstyle(nextValue));
-    }
-  }
-
-  let key = colors.cyan(`<${node.key}>`);
-  node.placeholder = key;
-
-  if (node.parent.parent.type !== 'root') {
-    key = void 0;
-  }
-
-  let fallback = [node.value, nextValue, key].find(v => isValue(v, node));
-  let value = [context[node.key], utils.get(context, node.key)].find(v => isValue(v, node));
-
-  if (!isValue(value, node)) {
-    value = fallback;
-  }
-  if (compiler.helpers[node.key]) {
-    value = compiler.helpers[node.key](value, node);
-  }
-
-  if (value && nextValue) {
-    value += nextValue
-  }
-
-  if (compiler.options.finalRender && value.includes(node.placeholder)) {
-    value = value.split(node.placeholder).join('');
-  }
-
-  // console.log('node.value', [node.value])
-  // console.log('next value', [nextValue])
-  // console.log('     value', [value])
-  // console.log('---')
-
-  if (value === node.value) {
-    return colors.magenta(value);
-  }
-
-  if (isValue(value, node)) {
-    return colors.green(value);
-  }
-
-  return value;
-});
-
-const helpers = {
-  keywords(value) {
-    return '["' + value.split(/,\s*/).join('", "') + '"]';
-  },
-  author_email(value, node) {
-    return value && value !== node.placeholder ? ` <${value}> ` : ' ';
-  }
-};
-
 let ast = parse(pkg);
-let fn = compiler.compile(ast, { helpers });
+let fn = compile(ast, { helpers, debug: true });
 
 const data = {
   foo: 'bar',

@@ -4,6 +4,7 @@ console.time('total');
 process.on('exit', () => console.timeEnd('total'));
 
 const path = require('path');
+const helpers = require('./support/helpers');
 const colors = require('ansi-colors');
 const Tabstops = require('..');
 
@@ -29,12 +30,6 @@ let pkg = `{
   "almost_a_template": "{{{$}}}"
 }`;
 
-const helpers = {
-  keywords(value) {
-    return '["' + value.split(/,\s*/).join('", "') + '"]';
-  }
-};
-
 const data = {
   name: 'assemble',
   author: { name: 'Jon Schlinkert', username: 'jonschlinkert' },
@@ -45,6 +40,6 @@ const data = {
   keywords: 'foo,bar,baz'
 };
 
-let tabstops = new Tabstops(pkg, { helpers });
+let tabstops = new Tabstops(pkg, { helpers, debug: true });
 let res = tabstops.render(data);
-// console.log(res);
+console.log(res);
