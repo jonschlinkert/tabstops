@@ -1,0 +1,14 @@
+---
+description: React class component
+scope: source.js
+tabTrigger: rcc
+---
+import React, { Component } from 'react';
+
+export class ${1:${TM_FILENAME/(.+)\..+|.*/$1/:ComponentName}} extends Component {
+  render() {
+    return ${2:(
+      ${3:<div>${0}</div>}
+    );}
+  }
+}

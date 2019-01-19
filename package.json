@@ -20,8 +20,11 @@
     "tabstops"
   ],
   "devDependencies": {
-    "ansi-colors": "^3.2.3",
     "mocha": "^5.2.0",
+    "prettier": "^1.15.3",
     "time-require": "github:jonschlinkert/time-require"
+  },
+  "dependencies": {
+    "ansi-colors": "^3.2.3"
   }
 }
