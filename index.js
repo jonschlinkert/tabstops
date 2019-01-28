@@ -3,11 +3,14 @@
 const parse = require('./lib/parse');
 const compile = require('./lib/compile');
 const TabState = require('./lib/tabstate');
+const variables = require('./lib/variables');
+const helpers = require('./lib/helpers');
 
-class Tabstops {
-  constructor(input, options, state) {
+class Snippet {
+  constructor(input, options = {}, state) {
     this.options = options;
     this.state = new TabState(state);
+    this.variables = variables(this.state, options);
     this.ast = parse(input, options);
     this.fn = compile(this.ast, options);
   }
@@ -64,8 +67,21 @@ class Tabstops {
    * @api public
    */
 
-  render(context) {
-    return this.fn(context, this.state);
+  context(locals = {}) {
+    let helpers = { ...this.helpers, ...locals.helpers };
+    return { locals, variables: this.variables, helpers };
+  }
+
+  /**
+   * Render the snippet that was passed to the TabStops contstructor.
+   *
+   * @param {Object} `context` The data object to use for rendering the string.
+   * @return {String} Returns the rendered string.
+   * @api public
+   */
+
+  async render(locals) {
+    return (await this.fn)(this.context(locals), this.state);
   }
 
   /**
@@ -93,6 +109,29 @@ class Tabstops {
   static compile(ast, options) {
     return compile(ast, options);
   }
+
+  /**
+   * Render the given input string.
+   *
+   * @param {String} `input`
+   * @param {Object} `locals`
+   * @param {Object} `options`
+   * @return {String} Returns the rendered string.
+   * @api public
+   */
+
+  static async render(str, locals, options) {
+    return (await compile(await parse(str, options), options))(locals);
+  }
 }
 
-module.exports = Tabstops;
+module.exports = Snippet;
+
+const snippet = new Snippet('Foo ${ENV_USER} Bar', { file: { path: __filename }});
+
+console.log(snippet.left())
+console.log(snippet.right())
+
+snippet.render()
+  .then(output => console.log(output));
+

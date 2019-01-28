@@ -5,8 +5,8 @@ const assert = require('assert');
 const parse = require('../lib/parse');
 
 describe('placeholders - parse', () => {
-  it('should parse a placeholder', () => {
-    let ast = parse('foo ${1:bar} baz');
+  it('should parse a placeholder', async () => {
+    let ast = await parse('foo ${1:bar} baz');
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -18,8 +18,8 @@ describe('placeholders - parse', () => {
     });
   });
 
-  it('should parse multiple placeholders', () => {
-    let ast = parse('foo ${1:bar} baz ${2:qux} fez');
+  it('should parse multiple placeholders', async () => {
+    let ast = await parse('foo ${1:bar} baz ${2:qux} fez');
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -33,8 +33,8 @@ describe('placeholders - parse', () => {
     });
   });
 
-  it('should parse nested placeholders', () => {
-    let ast = parse('foo ${1:placeholder${2:another}} bar');
+  it('should parse nested placeholders', async () => {
+    let ast = await parse('foo ${1:placeholder${2:another}} bar');
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -61,8 +61,8 @@ describe('placeholders - parse', () => {
     });
   });
 
-  it('should parse nested placeholders with newlines', () => {
-    let ast = parse(`\${2:(
+  it('should parse nested placeholders with newlines', async () => {
+    let ast = await parse(`\${2:(
         \${3:<div>\${0}</div>}
       );}`);
 

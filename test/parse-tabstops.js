@@ -5,8 +5,8 @@ const assert = require('assert');
 const parse = require('../lib/parse');
 
 describe('tabstops - parse', () => {
-  it('should parse a tabstop', () => {
-    assert.deepEqual(parse('foo $1 bar'), {
+  it('should parse a tabstop', async () => {
+    assert.deepEqual(await parse('foo $1 bar'), {
       type: 'root',
       nodes: [
         { type: 'text', value: 'foo ' },
@@ -16,8 +16,8 @@ describe('tabstops - parse', () => {
     });
   });
 
-  it('should parse multiple tabstops', () => {
-    let ast = parse('foo $1 bar $2 baz $3 qux');
+  it('should parse multiple tabstops', async () => {
+    let ast = await parse('foo $1 bar $2 baz $3 qux');
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -33,8 +33,8 @@ describe('tabstops - parse', () => {
     });
   });
 
-  it('should parse a tabstop in a template literal', () => {
-    let ast = parse('foo ${1} bar');
+  it('should parse a tabstop in a template literal', async () => {
+    let ast = await parse('foo ${1} bar');
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -46,8 +46,8 @@ describe('tabstops - parse', () => {
     });
   });
 
-  it('should parse multiple tabstops in template literals', () => {
-    let ast = parse('foo ${1} bar ${2} baz');
+  it('should parse multiple tabstops in template literals', async () => {
+    let ast = await parse('foo ${1} bar ${2} baz');
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -61,8 +61,8 @@ describe('tabstops - parse', () => {
     });
   });
 
-  it('should parse nested tabstops', () => {
-    let ast = parse('foo ${1:${2}} bar');
+  it('should parse nested tabstops', async () => {
+    let ast = await parse('foo ${1:${2}} bar');
     assert.deepEqual(ast, {
       type: 'root',
       nodes: [

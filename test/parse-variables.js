@@ -6,8 +6,8 @@ const parse = require('../lib/parse');
 const format = require('./support/format');
 
 describe('variables - parse', () => {
-  it('should parse a variable', () => {
-    assert.deepEqual(parse('foo $TM_FILEPATH bar'), {
+  it('should parse a variable', async () => {
+    assert.deepEqual(await parse('foo $TM_FILEPATH bar'), {
       type: 'root',
       nodes: [
         { type: 'text', value: 'foo ' },
@@ -16,7 +16,7 @@ describe('variables - parse', () => {
       ]
     });
 
-    assert.deepEqual(parse('foo $TM_FILEPATH bar', { collate: true }), {
+    assert.deepEqual(await parse('foo $TM_FILEPATH bar', { collate: true }), {
       type: 'root',
       nodes: [
         { type: 'text', value: 'foo ' },
@@ -26,8 +26,8 @@ describe('variables - parse', () => {
     });
   });
 
-  it('should parse an alphanumeric tabstop variable', () => {
-    let ast = parse('foo $FOO123BAR bar');
+  it('should parse an alphanumeric tabstop variable', async () => {
+    let ast = await parse('foo $FOO123BAR bar');
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -39,8 +39,8 @@ describe('variables - parse', () => {
     });
   });
 
-  it('should parse and collate an alphanumeric tabstop variable', () => {
-    let ast = parse('foo $FOO123BAR bar', { collate: true });
+  it('should parse and collate an alphanumeric tabstop variable', async () => {
+    let ast = await parse('foo $FOO123BAR bar', { collate: true });
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -52,8 +52,8 @@ describe('variables - parse', () => {
     });
   });
 
-  it('should correctly deal non-terminator right brace', () => {
-    let ast = parse('foo $FOO123BAR} bar', { collate: true });
+  it('should correctly deal non-terminator right brace', async () => {
+    let ast = await parse('foo $FOO123BAR} bar', { collate: true });
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -65,8 +65,8 @@ describe('variables - parse', () => {
     });
   });
 
-  it('should correctly deal with escaped right brace', () => {
-    let ast = parse('foo $FOO123BAR\\} bar', { collate: true });
+  it('should correctly deal with escaped right brace', async () => {
+    let ast = await parse('foo $FOO123BAR\\} bar', { collate: true });
 
     assert.deepEqual(ast, {
       type: 'root',
