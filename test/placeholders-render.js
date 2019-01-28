@@ -4,7 +4,7 @@ require('mocha');
 const assert = require('assert');
 const render = require('../lib/render');
 
-describe.skip('template literals', () => {
+describe.skip('placeholders - render', () => {
   it('should render a template literal', () => {
     assert.equal(render('${foo}', { foo: 'bar' }), 'bar');
     assert.equal(render('(${foo})', { foo: 'bar' }), '(bar)');
