@@ -11,12 +11,7 @@ describe('variables - parse', () => {
       type: 'root',
       nodes: [
         { type: 'text', value: 'foo ' },
-        {
-          type: 'tabstop',
-          stop: null,
-          placeholder: 'TM_FILEPATH',
-          nodes: []
-        },
+        { type: 'variable', value: 'TM_FILEPATH' },
         { type: 'text', value: ' bar' }
       ]
     });
@@ -25,12 +20,7 @@ describe('variables - parse', () => {
       type: 'root',
       nodes: [
         { type: 'text', value: 'foo ' },
-        {
-          type: 'tabstop',
-          stop: null,
-          placeholder: 'TM_FILEPATH',
-          nodes: []
-        },
+        { type: 'variable', value: 'TM_FILEPATH' },
         { type: 'text', value: ' bar' }
       ]
     });
@@ -43,12 +33,7 @@ describe('variables - parse', () => {
       type: 'root',
       nodes: [
         { type: 'text', value: 'foo ' },
-        {
-          type: 'tabstop',
-          stop: null,
-          placeholder: 'FOO123BAR',
-          nodes: []
-        },
+        { type: 'variable', value: 'FOO123BAR' },
         { type: 'text', value: ' bar' }
       ]
     });
@@ -61,12 +46,7 @@ describe('variables - parse', () => {
       type: 'root',
       nodes: [
         { type: 'text', value: 'foo ' },
-        {
-          type: 'tabstop',
-          stop: null,
-          placeholder: 'FOO123BAR',
-          nodes: []
-        },
+        { type: 'variable', value: 'FOO123BAR' },
         { type: 'text', value: ' bar' }
       ]
     });
@@ -79,12 +59,7 @@ describe('variables - parse', () => {
       type: 'root',
       nodes: [
         { type: 'text', value: 'foo ' },
-        {
-          type: 'tabstop',
-          stop: null,
-          placeholder: 'FOO123BAR',
-          nodes: []
-        },
+        { type: 'variable', value: 'FOO123BAR' },
         { type: 'text', value: '} bar' }
       ]
     });
@@ -97,12 +72,7 @@ describe('variables - parse', () => {
       type: 'root',
       nodes: [
         { type: 'text', value: 'foo ' },
-        {
-          type: 'tabstop',
-          stop: null,
-          placeholder: 'FOO123BAR',
-          nodes: []
-        },
+        { type: 'variable', value: 'FOO123BAR' },
         { type: 'text', value: '\\} bar' }
       ]
     });
