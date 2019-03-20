@@ -3,16 +3,13 @@
 const parse = require('./lib/parse');
 const compile = require('./lib/compile');
 const TabState = require('./lib/tabstate');
-const variables = require('./lib/variables');
 const helpers = require('./lib/helpers');
 
 class Snippet {
-  constructor(input, options = {}, state) {
-    this.options = options;
+  constructor(input, options, state) {
+    this.options = { ...options };
     this.state = new TabState(state);
-    this.variables = variables(this.state, options);
-    this.ast = parse(input, options);
-    this.fn = compile(this.ast, options);
+    this.ast = parse(input, this.options);
   }
 
   /**
@@ -60,7 +57,7 @@ class Snippet {
   }
 
   /**
-   * Render the snippet that was passed to the TabStops contstructor.
+   * Render the snippet that was passed to the Snippet contstructor.
    *
    * @param {Object} `context` The data object to use for rendering the string.
    * @return {String} Returns the rendered string.
@@ -68,12 +65,23 @@ class Snippet {
    */
 
   context(locals = {}) {
-    let helpers = { ...this.helpers, ...locals.helpers };
-    return { locals, variables: this.variables, helpers };
+    return { ...locals, helpers: { ...this.helpers, ...locals.helpers } };
   }
 
   /**
-   * Render the snippet that was passed to the TabStops contstructor.
+   * Compile the snippet that was passed to the Snippet contstructor.
+   *
+   * @param {Object} `options`
+   * @return {Function} Returns the compiled function.
+   * @api public
+   */
+
+  async compile(options) {
+    return compile(await this.ast, { ...this.options, ...options });
+  }
+
+  /**
+   * Render the string that was passed to the Snippet contstructor.
    *
    * @param {Object} `context` The data object to use for rendering the string.
    * @return {String} Returns the rendered string.
@@ -81,7 +89,8 @@ class Snippet {
    */
 
   async render(locals) {
-    return (await this.fn)(this.context(locals), this.state);
+    if (!this.fn) this.fn = await this.compile(this.options);
+    return this.fn(this.context(locals), this.state, this.resolve);
   }
 
   /**
@@ -111,6 +120,19 @@ class Snippet {
   }
 
   /**
+   * Compile the given AST or input string.
+   *
+   * @param {Object|String} `ast` AST returned by the parse method, or input string.
+   * @param {Object} `options`
+   * @return {Function} Returns a function to be called with a context (data object).
+   * @api public
+   */
+
+  static resolve(value) {
+    return value;
+  }
+
+  /**
    * Render the given input string.
    *
    * @param {String} `input`
@@ -120,18 +142,11 @@ class Snippet {
    * @api public
    */
 
-  static async render(str, locals, options) {
-    return (await compile(await parse(str, options), options))(locals);
+  static get render() {
+    return async (str, locals, options) => {
+      return (await compile(await parse(str, options), options))(locals);
+    }
   }
 }
 
 module.exports = Snippet;
-
-const snippet = new Snippet('Foo ${ENV_USER} Bar', { file: { path: __filename }});
-
-console.log(snippet.left())
-console.log(snippet.right())
-
-snippet.render()
-  .then(output => console.log(output));
-
