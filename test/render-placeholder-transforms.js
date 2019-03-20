@@ -7,7 +7,7 @@ const helpers = require('../lib/helpers');
 
 describe('placeholder transforms - render', () => {
   it('should render placeholder transforms', async () => {
-    let locals = { helpers };
+    let locals = { helpers};
     assert.equal(await render('Foo ${1/./=/g} Bar'), 'Foo  Bar');
     assert.equal(await render('${1:foo}\n${1/./=/g}'), 'foo\n===');
     assert.equal(await render('Foo ${1/(.)/${1}/g} Bar'), 'Foo  Bar');

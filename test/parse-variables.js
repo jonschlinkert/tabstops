@@ -16,7 +16,7 @@ describe('variables - parse', () => {
       ]
     });
 
-    assert.deepEqual(await parse('foo $TM_FILEPATH bar', { collate: true }), {
+    assert.deepEqual(await parse('foo $TM_FILEPATH bar'), {
       type: 'root',
       nodes: [
         { type: 'text', value: 'foo ' },
@@ -26,8 +26,8 @@ describe('variables - parse', () => {
     });
   });
 
-  it('should parse an alphanumeric tabstop variable', async () => {
-    let ast = await parse('foo $FOO123BAR bar');
+  it('should parse an alphanumeric tabstop variable', async() => {
+    let ast = await parse('foo $FOO123BAR bar', { tokens: true });
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -35,16 +35,26 @@ describe('variables - parse', () => {
         { type: 'text', value: 'foo ' },
         { type: 'variable', value: 'FOO123BAR' },
         { type: 'text', value: ' bar' }
+      ],
+      tokens: [
+        { type: 'text', value: 'foo ' },
+        { type: 'variable', value: 'FOO123BAR' },
+        { type: 'text', value: ' bar' }
       ]
     });
   });
 
-  it('should parse and collate an alphanumeric tabstop variable', async () => {
-    let ast = await parse('foo $FOO123BAR bar', { collate: true });
+  it('should parse an alphanumeric tabstop variable', async () => {
+    let ast = await parse('foo $FOO123BAR bar', { tokens: true });
 
     assert.deepEqual(ast, {
       type: 'root',
       nodes: [
+        { type: 'text', value: 'foo ' },
+        { type: 'variable', value: 'FOO123BAR' },
+        { type: 'text', value: ' bar' }
+      ],
+      tokens: [
         { type: 'text', value: 'foo ' },
         { type: 'variable', value: 'FOO123BAR' },
         { type: 'text', value: ' bar' }
@@ -53,11 +63,16 @@ describe('variables - parse', () => {
   });
 
   it('should correctly deal non-terminator right brace', async () => {
-    let ast = await parse('foo $FOO123BAR} bar', { collate: true });
+    let ast = await parse('foo $FOO123BAR} bar', { tokens: true });
 
     assert.deepEqual(ast, {
       type: 'root',
       nodes: [
+        { type: 'text', value: 'foo ' },
+        { type: 'variable', value: 'FOO123BAR' },
+        { type: 'text', value: '} bar' }
+      ],
+      tokens: [
         { type: 'text', value: 'foo ' },
         { type: 'variable', value: 'FOO123BAR' },
         { type: 'text', value: '} bar' }
@@ -66,7 +81,7 @@ describe('variables - parse', () => {
   });
 
   it('should correctly deal with escaped right brace', async () => {
-    let ast = await parse('foo $FOO123BAR\\} bar', { collate: true });
+    let ast = await parse('foo $FOO123BAR\\} bar', { tokens: true });
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -74,6 +89,25 @@ describe('variables - parse', () => {
         { type: 'text', value: 'foo ' },
         { type: 'variable', value: 'FOO123BAR' },
         { type: 'text', value: '\\} bar' }
+      ],
+      tokens: [
+        { type: 'text', value: 'foo ' },
+        { type: 'variable', value: 'FOO123BAR' },
+        { type: 'text', value: '\\} bar' }
+      ]
+    });
+  });
+
+  it('should add line numbers when enabled', async () => {
+    let ast = await parse('foo $FOO123BAR\\}\nbar\n$BAZ', { lines: true });
+
+    assert.deepEqual(ast, {
+      type: 'root',
+      nodes: [
+        { type: 'text', value: 'foo ', line: 1 },
+        { type: 'variable', value: 'FOO123BAR', line: 1 },
+        { type: 'text', value: '\\}\nbar\n', line: 1 },
+        { type: 'variable', value: 'BAZ', line: 3 }
       ]
     });
   });

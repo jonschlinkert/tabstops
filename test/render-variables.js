@@ -8,6 +8,7 @@ describe('variables - render', () => {
   it('should render a template variable', async () => {
     assert.equal(await render('$FOO', { FOO: 'bar' }), 'bar');
     assert.equal(await render('($FOO)', { FOO: 'bar' }), '(bar)');
+    assert.equal(await render('Foo ${ENV_FFFOOFOFOFOF} Bar'), 'Foo  Bar');
   });
 
   it('should render consecutive template variables', async () => {

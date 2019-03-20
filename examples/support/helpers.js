@@ -1,5 +1,8 @@
 
 module.exports = {
+  files(value) {
+    return value ? `["${value.split(/,\s*/).join('", "')}"]` : '[]';
+  },
   keywords(value) {
     return value ? `["${value.split(/,\s*/).join('", "')}"]` : '[]';
   },

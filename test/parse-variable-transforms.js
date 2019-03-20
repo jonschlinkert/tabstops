@@ -19,7 +19,7 @@ describe('variable transforms - parse', () => {
       regex: /(.*)\..+$/gi,
       format: '$1',
       flags: 'gi',
-      groups: [{ type: 'match', group: 1 }]
+      nodes: [{ type: 'tabstop', number: 1 }]
     });
 
     assert.deepEqual(await transform('TM_FILENAME/(.*)\\}.+$/$1/gi'), {
@@ -27,7 +27,7 @@ describe('variable transforms - parse', () => {
       regex: /(.*)\}.+$/gi,
       format: '$1',
       flags: 'gi',
-      groups: [{ type: 'match', group: 1 }]
+      nodes: [{ type: 'tabstop', number: 1 }]
     });
 
     assert.deepEqual(await transform('TM_FILENAME/(.*)\\/.+$/$1/gi'), {
@@ -35,7 +35,7 @@ describe('variable transforms - parse', () => {
       regex: /(.*)\/.+$/gi,
       format: '$1',
       flags: 'gi',
-      groups: [{ type: 'match', group: 1 }]
+      nodes: [{ type: 'tabstop', number: 1 }]
     });
 
     assert.deepEqual(await transform('TM_FILENAME/([a-b]{1,4})\\/.+$/$1/gi:ComponentName'), {
@@ -44,7 +44,7 @@ describe('variable transforms - parse', () => {
       format: '$1',
       flags: 'gi',
       placeholder: 'ComponentName',
-      groups: [{ type: 'match', group: 1 }]
+      nodes: [{ type: 'tabstop', number: 1 }]
     });
 
     assert.deepEqual(await transform('foobar\\|foobar/(foo)(bar)/$1${_}$2/g'), {
@@ -52,10 +52,10 @@ describe('variable transforms - parse', () => {
       regex: /(foo)(bar)/g,
       format: '$1${_}$2',
       flags: 'g',
-      groups: [
-        { type: 'match', group: 1 },
+      nodes: [
+        { type: 'tabstop', number: 1 },
         { type: 'variable', value: '_' },
-        { type: 'match', group: 2 }
+        { type: 'tabstop', number: 2 }
       ]
     });
 
@@ -64,10 +64,10 @@ describe('variable transforms - parse', () => {
       regex: /(foo)(bar)/g,
       format: '${1}_$2',
       flags: 'g',
-      groups: [
-        { type: 'match', group: 1 },
+      nodes: [
+        { type: 'tabstop', number: 1 },
         { type: 'text', value: '_' },
-        { type: 'match', group: 2 }
+        { type: 'tabstop', number: 2 }
       ]
     });
 
@@ -76,10 +76,10 @@ describe('variable transforms - parse', () => {
       regex: /(foo)(bar)/g,
       format: '${1}_${2}',
       flags: 'g',
-      groups: [
-        { type: 'match', group: 1 },
+      nodes: [
+        { type: 'tabstop', number: 1 },
         { type: 'text', value: '_' },
-        { type: 'match', group: 2 }
+        { type: 'tabstop', number: 2 }
       ]
     });
 
@@ -88,12 +88,12 @@ describe('variable transforms - parse', () => {
       regex: /(foo)(bar)/g,
       format: '${1}_${2:TM_FILENAME}',
       flags: 'g',
-      groups: [
-        { type: 'match', group: 1 },
+      nodes: [
+        { type: 'tabstop', number: 1 },
         { type: 'text', value: '_' },
         {
-          type: 'match',
-          group: 2,
+          type: 'tabstop',
+          number: 2,
           placeholder: 'TM_FILENAME'
         }
       ]
@@ -104,12 +104,12 @@ describe('variable transforms - parse', () => {
       regex: /(foo)(bar)/g,
       format: '${1}_${2:${TM_FILENAME}}',
       flags: 'g',
-      groups: [
-        { type: 'match', group: 1 },
+      nodes: [
+        { type: 'tabstop', number: 1 },
         { type: 'text', value: '_' },
         {
-          type: 'match',
-          group: 2,
+          type: 'tabstop',
+          number: 2,
           nodes: [
             {
               type: 'variable',

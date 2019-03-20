@@ -20,8 +20,7 @@ describe('choices - parse', () => {
     assert.deepEqual(await choices('${1|one,  two,    three|}'), ['one', '  two', '    three']);
     assert.deepEqual(await choices('${1|one\\,  two,    three|}'), ['one\\,  two', '    three']);
     assert.deepEqual(await choices('${1|one\\,  two \\| three|}'), ['one\\,  two \\| three']);
-    assert.deepEqual(await choices('${1|\\,,},$,\\|,\\\\|}'), [ '\\,', '}', '$', '\\|', '\\\\' ]);
-
+    assert.deepEqual(await choices('${1|\\,,},$,\\|,\\\\|}'), ['\\,', '}', '$', '\\|', '\\\\']);
     assert.deepEqual(await parse('${0|one,two,three|}'), {
       type: 'root',
       nodes: [

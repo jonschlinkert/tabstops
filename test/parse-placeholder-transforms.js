@@ -3,8 +3,8 @@
 require('mocha');
 const assert = require('assert');
 const parse = require('../lib/parse');
-const transform = async input => {
-  let node = (await parse(input)).nodes[1];
+const transform = async (input, options) => {
+  let node = (await parse(input, options)).nodes[1];
   delete node.transform;
   delete node.value;
   delete node.type;
@@ -18,7 +18,7 @@ describe('placeholder transforms - parse', () => {
       regex: /./g,
       format: '=',
       flags: 'g',
-      groups: [
+      nodes: [
         {
           type: 'text',
           value: '='
@@ -33,10 +33,10 @@ describe('placeholder transforms - parse', () => {
       regex: /(.)/g,
       format: '${1}',
       flags: 'g',
-      groups: [
+      nodes: [
         {
-          type: 'match',
-          group: 1
+          type: 'tabstop',
+          number: 1
         }
       ]
     });
@@ -46,11 +46,11 @@ describe('placeholder transforms - parse', () => {
       regex: /(.)/g,
       format: '${1:upcase}',
       flags: 'g',
-      groups: [
+      nodes: [
         {
-          group: 1,
+          number: 1,
           placeholder: 'upcase',
-          type: 'match'
+          type: 'tabstop'
         }
       ]
     });

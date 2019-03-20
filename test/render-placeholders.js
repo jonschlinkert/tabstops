@@ -33,9 +33,14 @@ describe('placeholders - render', () => {
     assert.equal(await render('${foo:before ${ABC} middle ${XYZ} after}', { ABC: 'one', XYZ: 'two' }), 'before one middle two after');
   });
 
+  it('should parse tabstops with placeholders', async () => {
+    assert.equal(await render('${4:homepage}', { homepage: 'foo' }), 'foo');
+    assert.equal(await render('${4:${homepage}}', { homepage: 'foo' }), 'foo');
+  });
+
   it('should preserve quoted strings', async () => {
-    assert.equal(await render('${4:"${homepage}"}'), '${homepage}');
-    assert.equal(await render(`\${4:'\${homepage}'}`), '${homepage}');
-    assert.equal(await render('${4:"${homepage:https://github.com/${6:${username}}}"}'), '${homepage:https://github.com/${6:${username}}}');
+    assert.equal(await render('${4:"${homepage}"}'), '"${homepage}"');
+    assert.equal(await render(`\${4:'\${homepage}'}`), '\'${homepage}\'');
+    assert.equal(await render('${4:"${homepage:https://github.com/${6:${username}}}"}'), '"${homepage:https://github.com/${6:${username}}}"');
   });
 });
