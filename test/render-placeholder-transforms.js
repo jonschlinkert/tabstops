@@ -1,7 +1,7 @@
 'use strict';
 
 require('mocha');
-const assert = require('assert');
+const assert = require('assert').strict;
 const render = require('../lib/render');
 const helpers = require('../lib/helpers');
 

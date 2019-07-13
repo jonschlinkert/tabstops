@@ -1,19 +1,19 @@
 'use strict';
 
 require('mocha');
-const assert = require('assert');
+const assert = require('assert').strict;
 const parse = require('../lib/parse');
 const transform = async (input, options) => {
   let node = (await parse(input, options)).nodes[1];
   delete node.transform;
-  delete node.value;
-  delete node.type;
   return node;
 };
 
 describe('placeholder transforms - parse', () => {
   it('should parse placeholder transform snippets', async () => {
     assert.deepEqual(await transform('Foo ${1/./=/g} Bar'), {
+      type: 'transform',
+      value: '1/./=/g',
       varname: '1',
       regex: /./g,
       format: '=',
@@ -21,7 +21,8 @@ describe('placeholder transforms - parse', () => {
       nodes: [
         {
           type: 'text',
-          value: '='
+          value: '=',
+          line: 1
         }
       ]
     });
@@ -29,6 +30,8 @@ describe('placeholder transforms - parse', () => {
 
   it('should parse format variable', async () => {
     assert.deepEqual(await transform('Foo ${1/(.)/${1}/g} Bar'), {
+      type: 'transform',
+      value: '1/(.)/${1}/g',
       varname: '1',
       regex: /(.)/g,
       format: '${1}',
@@ -36,12 +39,17 @@ describe('placeholder transforms - parse', () => {
       nodes: [
         {
           type: 'tabstop',
+          open: '${',
+          close: '}',
+          line: 1,
           number: 1
         }
       ]
     });
 
     assert.deepEqual(await transform('Foo ${1/(.)/${1:upcase}/g} Bar'), {
+      type: 'transform',
+      value: '1/(.)/${1:upcase}/g',
       varname: '1',
       regex: /(.)/g,
       format: '${1:upcase}',
@@ -49,8 +57,11 @@ describe('placeholder transforms - parse', () => {
       nodes: [
         {
           number: 1,
+          line: 1,
           placeholder: 'upcase',
-          type: 'tabstop'
+          type: 'tabstop',
+          open: '${',
+          close: '}'
         }
       ]
     });

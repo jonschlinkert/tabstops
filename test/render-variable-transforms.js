@@ -1,7 +1,7 @@
 'use strict';
 
 require('mocha');
-const assert = require('assert');
+const assert = require('assert').strict;
 const render = require('../lib/render');
 const helpers = require('../lib/helpers');
 
@@ -19,7 +19,7 @@ describe('variable transforms - render', () => {
   });
 
   it('what is this supposed to do? anyone?', async () => {
-    assert.equal(await render('${1:${UNDEFINED/(.+)\\..+|.*/$1/:ComponentName}}'), '');
+    assert.equal(await render('${1:${SomeClass/(.+)\\..+|.*/$1/:ComponentName}}'), '');
   });
 
   it('should render transforms with helpers', async () => {

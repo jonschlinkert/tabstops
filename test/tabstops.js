@@ -2,11 +2,11 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const parse = require('../lib/parse');
+const TabStops = require('..');
 
-describe('placeholders - parse', () => {
-  it('should parse a placeholder', async () => {
-    let ast = await parse('foo ${1:bar} baz');
+describe('tabstops - parse', () => {
+  it.only('should parse a placeholder', async () => {
+    let { ast } = new TabStops('foo ${1:bar} baz');
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -27,7 +27,7 @@ describe('placeholders - parse', () => {
   });
 
   it('should parse a placeholder with whitespace', async () => {
-    let ast = await parse(`<div\${1: id="\${2:some_id}"}>
+    let { ast } = new TabStops(`<div\${1: id="\${2:some_id}"}>
     $0
 </div>`);
 
@@ -56,7 +56,7 @@ describe('placeholders - parse', () => {
   });
 
   it('should parse multiple placeholders', async () => {
-    let ast = await parse('foo ${1:bar} baz ${2:qux} fez');
+    let { ast } = new TabStops('foo ${1:bar} baz ${2:qux} fez');
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -86,7 +86,7 @@ describe('placeholders - parse', () => {
   });
 
   it('should parse nested placeholders', async () => {
-    let ast = await parse('foo ${1:placeholder${2:another}} bar');
+    let { ast } = new TabStops('foo ${1:placeholder${2:another}} bar');
 
     assert.deepEqual(ast, {
       type: 'root',
@@ -121,7 +121,7 @@ describe('placeholders - parse', () => {
   });
 
   it('should parse nested placeholders with newlines', async () => {
-    let ast = await parse('\${2:(\n        \${3:<div>\${0}</div>}\n      );}');
+    let { ast } = new TabStops('\${2:(\n        \${3:<div>\${0}</div>}\n      );}');
 
     assert.deepEqual(ast, {
       type: 'root',

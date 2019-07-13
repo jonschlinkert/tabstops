@@ -1,7 +1,7 @@
 'use strict';
 
 require('mocha');
-const assert = require('assert');
+const assert = require('assert').strict;
 const render = require('../lib/render');
 
 describe('placeholders - render', () => {
@@ -31,16 +31,11 @@ describe('placeholders - render', () => {
     assert.equal(await render('${homepage:https://github.com/${6:${username}}}', { username: 'jonschlinkert'}), 'https://github.com/jonschlinkert');
     assert.equal(await render('${homepage:https://github.com/${6:${username}}}', { username: 'jonschlinkert', homepage: 'https://github.com/doowb' }), 'https://github.com/doowb');
     assert.equal(await render('${foo:before ${ABC} middle ${XYZ} after}', { ABC: 'one', XYZ: 'two' }), 'before one middle two after');
+    assert.equal(await render('${foo:before ${ABC} middle ${XYZ} after}', { foo: 'bar' }), 'bar');
   });
 
   it('should parse tabstops with placeholders', async () => {
     assert.equal(await render('${4:homepage}', { homepage: 'foo' }), 'foo');
     assert.equal(await render('${4:${homepage}}', { homepage: 'foo' }), 'foo');
-  });
-
-  it('should preserve quoted strings', async () => {
-    assert.equal(await render('${4:"${homepage}"}'), '"${homepage}"');
-    assert.equal(await render(`\${4:'\${homepage}'}`), '\'${homepage}\'');
-    assert.equal(await render('${4:"${homepage:https://github.com/${6:${username}}}"}'), '"${homepage:https://github.com/${6:${username}}}"');
   });
 });

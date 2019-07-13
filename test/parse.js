@@ -1,8 +1,8 @@
 'use strict';
 
 require('mocha');
-const assert = require('assert');
-const parse = require('../lib/parse');
+const assert = require('assert').strict;
+const parse = require('../lib/parse/parse');
 
 describe('parse', () => {
   it('should parse a variable', () => {

@@ -1,7 +1,7 @@
 'use strict';
 
 require('mocha');
-const assert = require('assert');
+const assert = require('assert').strict;
 const parse = require('../lib/parse');
 
 describe('choices - parse', () => {
@@ -23,26 +23,34 @@ describe('choices - parse', () => {
     assert.deepEqual(await choices('${1|\\,,},$,\\|,\\\\|}'), ['\\,', '}', '$', '\\|', '\\\\']);
     assert.deepEqual(await parse('${0|one,two,three|}'), {
       type: 'root',
+      input: '${0|one,two,three|}',
       nodes: [
         {
           type: 'tabstop',
+          open: '${',
+          close: '}',
           number: 0,
-          nodes: []
+          line: 1
         }
       ]
     });
 
     assert.deepEqual(await parse('${1|one,two,three|}'), {
       type: 'root',
+      input: '${1|one,two,three|}',
       nodes: [
         {
           type: 'tabstop',
+          open: '${',
+          close: '}',
           number: 1,
+          line: 1,
           nodes: [
             {
               type: 'choices',
               value: '|one,two,three|',
-              choices: ['one', 'two', 'three']
+              choices: ['one', 'two', 'three'],
+              line: 1
             }
           ]
         }
@@ -51,15 +59,20 @@ describe('choices - parse', () => {
 
     assert.deepEqual(await parse('${2|one,two,three|}'), {
       type: 'root',
+      input: '${2|one,two,three|}',
       nodes: [
         {
           type: 'tabstop',
+          open: '${',
+          close: '}',
           number: 2,
+          line: 1,
           nodes: [
             {
               type: 'choices',
               value: '|one,two,three|',
-              choices: ['one', 'two', 'three']
+              choices: ['one', 'two', 'three'],
+              line: 1
             }
           ]
         }

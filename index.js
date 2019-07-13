@@ -68,6 +68,13 @@ class Snippet {
     return { ...locals, helpers: { ...this.helpers, ...locals.helpers } };
   }
 
+  resolve(value, key, node, parent) {
+    if (typeof this.options.resolve === 'function') {
+      return this.options.resolve(value, key, node, parent);
+    }
+    return value;
+  }
+
   /**
    * Compile the snippet that was passed to the Snippet contstructor.
    *
@@ -77,7 +84,7 @@ class Snippet {
    */
 
   async compile(options) {
-    return compile(await this.ast, { ...this.options, ...options });
+    return compile(this.ast, { ...this.options, ...options }, this.resolve.bind(this));
   }
 
   /**
@@ -143,8 +150,8 @@ class Snippet {
    */
 
   static get render() {
-    return async (str, locals, options) => {
-      return (await compile(await parse(str, options), options))(locals);
+    return (str, locals, options) => {
+      return compile(parse(str, options), options)(locals);
     }
   }
 }
