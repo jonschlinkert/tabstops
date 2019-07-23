@@ -1,7 +1,7 @@
 'use strict';
 
 const path = require('path');
-const parse = require('./parse');
+const parse = require('../lib/parse');
 
 process.env.TM_FILENAME = 'parse.js';
 process.env.TM_FILEPATH = path.join(__dirname, 'parse.js');
@@ -12,7 +12,7 @@ const fixtures = [
   {
     it: 'should return an empty string if the variable is undefined',
     input: '${UNDEFINED_VAR/^(.*)\\..+$/$0/}',
-    expected: '',
+    expected: ''
   },
   {
     it: 'should return the entire match when $0 is used',
@@ -20,7 +20,7 @@ const fixtures = [
       { input: '${TM_FILENAME/^(.*)\\..+$/$0/}', expected: 'parse.js' },
       { input: '${TM_FILENAME/^(.*)\\..+$/$0$0/}', expected: 'parse.jsparse.js' },
       { input: '${TM_FILENAME/^(.*)\\..+$/${0}$0/}', expected: 'parse.jsparse.js' },
-      { input: '${TM_FILENAME/^(.*)\\..+$/${0}${0}/}', expected: 'parse.jsparse.js' },
+      { input: '${TM_FILENAME/^(.*)\\..+$/${0}${0}/}', expected: 'parse.jsparse.js' }
     ]
   },
   {
@@ -32,7 +32,7 @@ const fixtures = [
       { input: '${TM_FILENAME/^(.*)\\.(.+)$/${2}/}', expected: 'js' },
       { input: '${TM_FILENAME/^(.*)\\.(.+)$/$2-$1/}', expected: 'js-parse' },
       { input: '${TM_FILENAME/^(.*)\\.(.+)$/${2}-$1/}', expected: 'js-parse' },
-      { input: '${TM_FILENAME/^(.*)\\.(.+)$/${2}-${1}/}', expected: 'js-parse' },
+      { input: '${TM_FILENAME/^(.*)\\.(.+)$/${2}-${1}/}', expected: 'js-parse' }
     ]
   },
   {
@@ -40,7 +40,7 @@ const fixtures = [
     it: 'should apply helpers to the specified match groups',
     units: [
       { input: '${TM_FILENAME/^(.*)\\..+$/${0:/upcase}/}', expected: 'PARSE.JS' },
-      { input: '${TM_FILENAME/^(.*)\\..+$/${1:/upcase}/}', expected: 'PARSE' },
+      { input: '${TM_FILENAME/^(.*)\\..+$/${1:/upcase}/}', expected: 'PARSE' }
     ]
   },
   {
@@ -68,7 +68,7 @@ const fixtures = [
       { input: '${1///}', expected: '' },
       { input: '${1/regex/format/gmi}', expected: '' },
       { input: '${1/([A-Z][a-z])/format/}', expected: '' },
-      { input: '${1/(void$)|(.+)/${1:?-\treturn nil;}/}', expected: '' },
+      { input: '${1/(void$)|(.+)/${1:?-\treturn nil;}/}', expected: '' }
     ]
   },
   {
@@ -161,29 +161,29 @@ const fixtures = [
       {
         it: 'should return entire string when regex is invalid',
         input: '${foo/([A-Z][a-z])/format/GMI}',
-        expected: '${foo/([A-Z][a-z])/format/GMI}',
+        expected: '${foo/([A-Z][a-z])/format/GMI}'
       },
       {
         it: 'should return entire string when regex is invalid',
         input: '${foo/([A-Z][a-z])/format/funky}',
-        expected: '${foo/([A-Z][a-z])/format/funky}',
+        expected: '${foo/([A-Z][a-z])/format/funky}'
       },
       {
         it: 'should return entire string when regex is invalid',
         input: '${foo/([A-Z][a-z]/format/}',
-        expected: '${foo/([A-Z][a-z]/format/}',
+        expected: '${foo/([A-Z][a-z]/format/}'
       },
       { input: '${foo/m\\/atch/$1/i}', expected: '' },
       { input: '${foo/regex\\/format/options}', expected: '' },
       {
         it: 'should not choke on incomplete expressions',
         input: '${foo///',
-        expected: '${foo///',
+        expected: '${foo///'
       },
       {
         it: 'should not choke on incomplete expressions',
         input: '${foo/regex/format/options',
-        expected: '${foo/regex/format/options',
+        expected: '${foo/regex/format/options'
       }
     ]
   },
@@ -200,7 +200,7 @@ const fixtures = [
     describe: 'choices',
     it: 'should ignore $0',
     units: [
-      { input: '${0|foo,bar|}', expected: '${0|foo,bar|}' },
+      { input: '${0|foo,bar|}', expected: '${0|foo,bar|}' }
     ]
   },
   {
@@ -273,7 +273,7 @@ const fixtures = [
       { input: '${1:${foo:${1}}}', expected: '' },
       { input: '${1:${foo:${1}}}', expected: 'BAR', data: { foo: 'BAR' } },
       { skip: true, input: '${1:${foo:one${1}two}}', expected: 'onetwo' },
-      { input: '${1:${foo:${1}}}', expected: 'abc', tabstops: { 1: 'abc' } },
+      { input: '${1:${foo:${1}}}', expected: 'abc', tabstops: { 1: 'abc' } }
     ]
   },
   {
