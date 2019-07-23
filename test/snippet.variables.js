@@ -3,7 +3,7 @@
 require('mocha');
 const assert = require('assert');
 const Snippet = require('../lib/Snippet');
-const { define } = require('../lib/utils');
+const { define, format } = require('../lib/utils');
 
 const parse = input => {
   const snippet = new Snippet(input);
@@ -55,10 +55,9 @@ describe('variables', () => {
             variable: 'TM_SELECTED_TEXT',
             nodes: [
               {
-                output: '',
                 range: [7, 26],
                 type: 'open_brace',
-                value: '${'
+                value: '${TM_SELECTED_TEXT:'
               },
               {
                 range: [26, 46],
@@ -66,7 +65,6 @@ describe('variables', () => {
                 value: 'no text was selected'
               },
               {
-                output: '',
                 range: [46, 47],
                 type: 'close_brace',
                 value: '}'
@@ -154,7 +152,7 @@ describe('variables', () => {
     const stringify = (input, fn, expected = input) => {
       let ast = parse(input);
       let output = (fn ? fn(ast) : ast).stringify();
-      return [expected, output];
+      return [output, expected];
     };
 
     it('should stringify variable nodes', () => {
@@ -165,6 +163,24 @@ describe('variables', () => {
       assert.equal(...stringify('foo $FOO123BAR} bar'));
       assert.equal(...stringify('foo $FOO123BAR\\} bar'));
       assert.equal(...stringify('foo $FOO123BAR\\}\nbar\n$BAZ'));
+    });
+  });
+
+  describe('toString', () => {
+    const toString = (input, fn, expected = input) => {
+      let ast = parse(input);
+      let output = (fn ? fn(ast) : ast).toString();
+      return [output, expected];
+    };
+
+    it('should toString variable nodes', () => {
+      const find = ast => ast.find('placeholder');
+      assert.equal(...toString('textbf{${TM_SELECTED_TEXT:no text was selected}}', find, '${TM_SELECTED_TEXT:no text was selected}'));
+      assert.equal(...toString('textbf{${TM_SELECTED_TEXT:no text was selected}}'));
+      assert.equal(...toString('foo $FOO123BAR bar'));
+      assert.equal(...toString('foo $FOO123BAR} bar'));
+      assert.equal(...toString('foo $FOO123BAR\\} bar'));
+      assert.equal(...toString('foo $FOO123BAR\\}\nbar\n$BAZ'));
     });
   });
 
@@ -190,7 +206,9 @@ describe('variables', () => {
     const inner = input => {
       let ast = parse(input);
       let node = ast.nodes.find(n => n.type !== 'text');
-      return node.inner();
+      if (node) {
+        return node.inner();
+      }
     };
 
     const fixtures = [
@@ -207,6 +225,10 @@ describe('variables', () => {
         'FOO123BAR'
       ],
       [
+        'foo ${FOO123BAR} bar',
+        'FOO123BAR'
+      ],
+      [
         'foo $FOO123BAR bar}',
         'FOO123BAR'
       ],
@@ -217,11 +239,51 @@ describe('variables', () => {
       [
         'foo $FOO123BAR\\}\nbar\n$BAZ',
         'FOO123BAR'
+      ],
+      [
+        // should match "\\" when it's the last character in the string
+        'foo $FOO123BAR\\}\nbar\n$BAZ\\',
+        'FOO123BAR'
       ]
     ];
 
     for (let fixture of fixtures) {
-      it(`should return inner value for: "${fixture[0]}"`, () => {
+      it(`should return inner value for: "${format(fixture[0])}"`, () => {
+        assert.equal(inner(fixture[0]), fixture[1]);
+      });
+    }
+  });
+
+  describe('escaped', () => {
+    const inner = input => {
+      let ast = parse(input);
+      let node = ast.nodes.find(n => n.type !== 'text');
+      if (node) {
+        return node.inner();
+      }
+    };
+
+    const fixtures = [
+      [
+        'foo \\${FOO123BAR} bar',
+        undefined
+      ],
+      [
+        'foo ${FOO123BAR\\} bar',
+        undefined
+      ],
+      [
+        'foo ${FOO123BAR.} bar',
+        undefined
+      ],
+      [
+        'foo \\$FOO123BAR bar',
+        undefined
+      ],
+    ];
+
+    for (let fixture of fixtures) {
+      it(`should not match escaped characters: "${format(fixture[0])}"`, () => {
         assert.equal(inner(fixture[0]), fixture[1]);
       });
     }

@@ -39,8 +39,16 @@ describe('choices', () => {
       assert.deepEqual(choices('${1|one\\,  two \\| three|}'), ['one\\,  two \\| three']);
     });
 
-    it('should parse escaped choices', () => {
+    it('should parse choices with escaped special characters', () => {
       assert.deepEqual(choices('${1|\\,,},$,\\|,\\\\|}'), ['\\,', '}', '$', '\\|', '\\\\']);
+    });
+
+    it('should ignore choices when first pipe is escaped', () => {
+      assert.deepEqual(choices('${1\\|foo,bar,baz|}'), undefined);
+    });
+
+    it('should ignore choices when last pipe is escaped', () => {
+      assert.deepEqual(choices('${1|foo,bar,baz\\|}'), undefined);
     });
   });
 

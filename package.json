@@ -20,7 +20,10 @@
     "tabstops"
   ],
   "dependencies": {
-    "ansi-colors": "^4.1.1"
+    "ansi-colors": "^4.1.1",
+    "enquirer": "file:../@enquirer/enquirer-3.0.0",
+    "log-update": "^3.2.0",
+    "picomatch": "^2.0.7"
   },
   "devDependencies": {
     "mocha": "^6.1.4",

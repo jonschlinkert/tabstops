@@ -14,18 +14,18 @@ const snippets = {
     'foo: ${4:${username:jonschlinkert}} baz',
     '${1:${FOO:abc$2def}}'
   ],
-  // placeholder_transform: [
-  //   'foo ${1:${SomeClass/([${.}]+)\\..+|.*/$1/g:ComponentName}}bar$0',
-  //   'foo ${1:${1/([${.}]+)\\..+|.*/$1/g:ComponentName}}bar$0',
-  //   'foo ${1:${1/([${.}]+)\\..+|.*/$1/ComponentName}}bar$0',
-  //   'foo ${1:${1/([${.}]+)\\..+|.*/$1/g}}bar$0',
-  //   'const stem = "${TM_FILENAME/(.*)\\..+$/$1/i}";',
-  //   'foo ${1:${TM_FILENAME/^(.)|(?:-(.))|(\\.js)/${1:+/upcase}${2:+/upcase}/g}}bar$0',
-  //   'foo ${1:${TM_FILENAME/^([${.}])|(?:-([${.}]))|(\\.js)/${1:?/upcase}${2:-/upcase}/g}}bar$0',
-  //   '${1:name} : ${2:type}${3/\\s:=(.*)/${4:+ :=}${1}/};\n$0',
-  //   'class ${1:${TM_FILENAME/(?:\\A|_)([A-Za-z0-9]+)(?:\\.txt)?/(?2::\\u$1)/g}} < ${2:Application}Controller\n  $3\nend',
-  //   '${1/(void$)|(.+)/${1:?-\treturn nil;}/}'
-  // ],
+  placeholder_transform: [
+    'foo ${1:${SomeClass/([${.}]+)\\..+|.*/$1/g:ComponentName}}bar$0',
+    'foo ${1:${1/([${.}]+)\\..+|.*/$1/g:ComponentName}}bar$0',
+    'foo ${1:${1/([${.}]+)\\..+|.*/$1/ComponentName}}bar$0',
+    'foo ${1:${1/([${.}]+)\\..+|.*/$1/g}}bar$0',
+    'const stem = "${TM_FILENAME/(.*)\\..+$/$1/i}";',
+    'foo ${1:${TM_FILENAME/^(.)|(?:-(.))|(\\.js)/${1:+/upcase}${2:+/upcase}/g}}bar$0',
+    'foo ${1:${TM_FILENAME/^([${.}])|(?:-([${.}]))|(\\.js)/${1:?/upcase}${2:-/upcase}/g}}bar$0',
+    '${1:name} : ${2:type}${3/\\s:=(.*)/${4:+ :=}${1}/};\n$0',
+    'class ${1:${TM_FILENAME/(?:\\A|_)([A-Za-z0-9]+)(?:\\.txt)?/(?2::\\u$1)/g}} < ${2:Application}Controller\n  $3\nend',
+    '${1/(void$)|(.+)/${1:?-\treturn nil;}/}'
+  ],
   tabstop: [
     'foo: $1 baz',
     'foo: $1 $2 $3 baz',
@@ -57,8 +57,8 @@ let keys = Object.keys(snippets);
 let type = keys[0];
 
 for (let key of Object.keys(snippets)) {
-  console.log();
-  console.log('=== Parsing:', key, 'snippets ===');
+  // console.log();
+  // console.log('=== Parsing:', key, 'snippets ===');
 
   for (let ele of snippets[key]) {
     let snippet = new Snippet(ele);
@@ -67,8 +67,8 @@ for (let key of Object.keys(snippets)) {
     // console.log([ele.slice(...ast.loc.range)]);
     // console.log([ast.stringify()]);
     // // console.log([ast.outer()]);
-    console.log();
-    console.log('---', [ele]);
+    // console.log();
+    // console.log('---', [ele]);
     // console.log(ast.nodes[1].nodes[1].nodes[3]);
 
     snippet.tabstops.set(1, 'One');

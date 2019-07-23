@@ -2,14 +2,19 @@
 
 const parse = require('./lib/parse');
 const compile = require('./lib/compile');
-const TabState = require('./lib/tabstate');
+const TabState = require('./lib/TabState');
 const helpers = require('./lib/helpers');
 
 class Snippet {
   constructor(input, options, state) {
     this.options = { ...options };
+    this.parser = new Parser(input, this.options);
+    this.ast = parse();
+    this.reset(state);
+  }
+
+  reset(state) {
     this.state = new TabState(state);
-    this.ast = parse(input, this.options);
   }
 
   /**
@@ -64,13 +69,23 @@ class Snippet {
    * @api public
    */
 
-  context(locals = {}) {
-    return { ...locals, helpers: { ...this.helpers, ...locals.helpers } };
+  context(data = {}) {
+    return { ...data, helpers: { ...this.helpers, ...data.helpers } };
   }
 
-  resolve(value, key, node, parent) {
+  /**
+   * Resolve a value.
+   *
+   * @param {any} `value`
+   * @param {String} `key`
+   * @param {Object} `node`
+   * @return {String} Returns the rendered string.
+   * @api public
+   */
+
+  resolve(value, key, node) {
     if (typeof this.options.resolve === 'function') {
-      return this.options.resolve(value, key, node, parent);
+      return this.options.resolve(value, key, node);
     }
     return value;
   }
@@ -84,7 +99,10 @@ class Snippet {
    */
 
   async compile(options) {
-    return compile(this.ast, { ...this.options, ...options }, this.resolve.bind(this));
+    let opts = { ...this.options, ...options };
+    let resolve = this.resolve.bind(this);
+    this.fn = this.ast.compile(opts, resolve);
+    return this.fn;
   }
 
   /**
@@ -95,9 +113,9 @@ class Snippet {
    * @api public
    */
 
-  async render(locals) {
-    if (!this.fn) this.fn = await this.compile(this.options);
-    return this.fn(this.context(locals), this.state, this.resolve);
+  async render(data) {
+    if (!this.fn) this.fn = this.compile(this.options);
+    return this.fn(this.context(data), this.state, this.resolve);
   }
 
   /**
@@ -122,19 +140,6 @@ class Snippet {
    * @api public
    */
 
-  static compile(ast, options) {
-    return compile(ast, options);
-  }
-
-  /**
-   * Compile the given AST or input string.
-   *
-   * @param {Object|String} `ast` AST returned by the parse method, or input string.
-   * @param {Object} `options`
-   * @return {Function} Returns a function to be called with a context (data object).
-   * @api public
-   */
-
   static resolve(value) {
     return value;
   }
@@ -143,16 +148,14 @@ class Snippet {
    * Render the given input string.
    *
    * @param {String} `input`
-   * @param {Object} `locals`
+   * @param {Object} `data`
    * @param {Object} `options`
    * @return {String} Returns the rendered string.
    * @api public
    */
 
-  static get render() {
-    return (str, locals, options) => {
-      return compile(parse(str, options), options)(locals);
-    }
+  static render(input, data, options) {
+    return parse(input, options).compile(options)(data);
   }
 }
 
