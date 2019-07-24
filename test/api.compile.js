@@ -2,12 +2,53 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const { parse, compile, render } = require('../lib/snippet');
+const { parse, compile, render } = require('../lib/Snippet');
 let tabstops;
 
 describe('compile', () => {
+  describe('from vscode', () => {
+    it('TM Snippets', () => {
+      assert.equal(compile('foo${1:bar}}')(), 'foobar}');
+      assert.equal(compile('foo${1:bar}${2:foo}}')(), 'foobarfoo}');
+      assert.equal(compile('foo${1:bar\\}${2:foo}}')(), 'foobar\\}foo');
+    });
+
+    it('TM Snippets - should unescape', () => {
+      const ast = parse('foo${1:bar\\}${2:foo}}', { unescape: true });
+      assert.equal(ast.compile()(), 'foobar}foo');
+    });
+
+    it('Parser, placeholder', () => {
+      assert.equal(compile('farboo')(), 'farboo');
+      assert.equal(compile('far{{}}boo')(), 'far{{}}boo');
+      assert.equal(compile('far{{123}}boo')(), 'far{{123}}boo');
+      assert.equal(compile('far\\{{123}}boo')(), 'far\\{{123}}boo');
+    });
+
+    it('Parser, literal code', () => {
+      assert.equal(compile('far`123`boo')(), 'far`123`boo');
+      assert.equal(compile('far\\`123\\`boo')(), 'far\\`123\\`boo');
+    });
+
+    it('Parser, variables/tabstop', () => {
+      let data = { TM_SELECTED_TEXT: '' };
+      assert.equal(compile('$far boo')(), 'far boo');
+      assert.equal(compile('$far boo')({ far: '' }), ' boo');
+      assert.equal(compile('$far-boo')(), 'far-boo');
+      assert.equal(compile('\\$far-boo')(), '\\$far-boo');
+      assert.equal(compile('far$farboo')(), 'farfarboo');
+      assert.equal(compile('far${farboo}')(), 'farfarboo');
+      assert.equal(compile('$123')(), '');
+      assert.equal(compile('$farboo')(), 'farboo');
+      assert.equal(compile('$far12boo')(), 'far12boo');
+      assert.equal(compile('000_${far}_000')(), '000_far_000');
+      assert.equal(compile('FFF_${TM_SELECTED_TEXT}_FFF$0')(), 'FFF_TM_SELECTED_TEXT_FFF');
+      assert.equal(compile('FFF_${TM_SELECTED_TEXT}_FFF$0')(data), 'FFF__FFF');
+    });
+  });
+
   describe('variables', () => {
-    it('should return the variable name with no values are defined', () => {
+    it('should return the variable name when no values are defined', () => {
       assert.equal(compile('foo ${name} bar')(), 'foo name bar');
       assert.equal(compile('foo $name bar')(), 'foo name bar');
       assert.equal(compile('${name}')(), 'name');
@@ -54,36 +95,36 @@ describe('compile', () => {
     })
   });
 
-  describe.skip('tabstops', () => {
+  describe('tabstops', () => {
     beforeEach(() => {
       tabstops = new Map();
     });
 
     it('should render a tabstop using a value from the context', () => {
       tabstops.set(1, 'OneTwo');
-      assert.equal(compile('${1}')({ tabstops }), 'OneTwo');
+      assert.equal(compile('${1}', { tabstops })(), 'OneTwo');
     });
 
-    it('should return the tabstop name with no values are defined', () => {
-      assert.equal(compile('${1}')({ tabstops }), 'name');
+    it('should return an empty string when no values are defined', () => {
+      assert.equal(compile('${1}', { tabstops })(), '');
     });
   });
 
-  describe.skip('tabstops with placeholders', () => {
+  describe('tabstops with placeholders', () => {
     beforeEach(() => {
       tabstops = new Map();
     });
 
     it('should render a tabstop using a value from the context', () => {
-      assert.equal(compile('${1:AbcXyz}')({ tabstops }), 'OneTwo');
+      assert.equal(compile('${1:${name}}', { tabstops })({ name: 'FooBar' }), 'FooBar');
     });
 
     it('should render a tabstop using its placeholder value', () => {
-      assert.equal(compile('${1:AbcXyz}')({ tabstops }), 'AbcXyz');
+      assert.equal(compile('${1:AbcXyz}', { tabstops })(), 'AbcXyz');
     });
 
-    it('should return the tabstop name with no values are defined', () => {
-      assert.equal(compile('${1}')({ tabstops }), 'name');
+    it('should return the tabstop name when no values are defined', () => {
+      assert.equal(compile('${1}', { tabstops })(), '');
     });
   });
 });

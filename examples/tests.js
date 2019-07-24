@@ -1,48 +1,69 @@
 'use strict';
 
 const path = require('path');
+const colors = require('ansi-colors');
 const parse = require('../lib/parse');
 
 process.env.TM_FILENAME = 'parse.js';
-process.env.TM_FILEPATH = path.join(__dirname, 'parse.js');
-process.env.TM_DIRECTORY = __dirname;
+process.env.TM_FILEPATH = path.resolve(__dirname, '../lib/parse.js');
+process.env.TM_DIRECTORY = path.resolve(__dirname, '../lib');
 process.env.TM_SELECTED_TEXT = 'FOOBAR';
 
+const log = console.log;
+
+const formatters = {
+  block(state) {
+    log(`<Block: <${state.resolved}: "${state.value}">`);
+    return colors.yellow.bold(`<${state.value}>`);
+  },
+
+  choices(state) {
+    log(`<Choices: <${state.resolved}: "${state.value}">`);
+    return colors.yellow.bold(`<${state.value}>`);
+  },
+
+  format(state) {
+    log(`<Format: <${state.resolved}: "${state.value}">`);
+    return colors.underline(`<${state.value}>`);
+  },
+
+  tabstop(state) {
+    log(`<Tabstop: <${state.resolved}: "${state.value}">`);
+    return colors.blue(`<${state.value}>`);
+  },
+
+  tabstop_placeholder(state) {
+    log(`<TabstopPlaceholder: <${state.resolved}: "${state.value}">`);
+    return colors.blue.italic(`<${state.value}>`);
+  },
+
+  tabstop_transform(state) {
+    log(`<TabstopTransform: <${state.resolved}: "${state.value}">`);
+    return colors.blue.underline(`<${state.value}>`);
+  },
+
+  text(state) {
+    log(`<Text: <${state.resolved}: "${state.value}">`);
+    return colors.green(`<${state.value}>`);
+  },
+
+  variable(state) {
+    log(`<Variable: <${state.resolved}: "${state.value}">`);
+    return colors.yellow(`<${state.value}>`);
+  },
+
+  variable_placeholder(state) {
+    log(`<VariablePlaceholder: <${state.resolved}: "${state.value}">`);
+    return colors.cyan(`<${state.value}>`);
+  },
+
+  variable_transform(state) {
+    log(`<VariableTransform: <${state.resolved}: "${state.value}">`);
+    return colors.red(`<${state.value}>`);
+  }
+};
+
 const fixtures = [
-  {
-    it: 'should return an empty string if the variable is undefined',
-    input: '${UNDEFINED_VAR/^(.*)\\..+$/$0/}',
-    expected: ''
-  },
-  {
-    it: 'should return the entire match when $0 is used',
-    units: [
-      { input: '${TM_FILENAME/^(.*)\\..+$/$0/}', expected: 'parse.js' },
-      { input: '${TM_FILENAME/^(.*)\\..+$/$0$0/}', expected: 'parse.jsparse.js' },
-      { input: '${TM_FILENAME/^(.*)\\..+$/${0}$0/}', expected: 'parse.jsparse.js' },
-      { input: '${TM_FILENAME/^(.*)\\..+$/${0}${0}/}', expected: 'parse.jsparse.js' }
-    ]
-  },
-  {
-    it: 'should return the specified match group',
-    units: [
-      { input: '${TM_FILENAME/^(.*)\\.(.+)$/$1/}', expected: 'parse' },
-      { input: '${TM_FILENAME/^(.*)\\.(.+)$/${1}/}', expected: 'parse' },
-      { input: '${TM_FILENAME/^(.*)\\.(.+)$/$2/}', expected: 'js' },
-      { input: '${TM_FILENAME/^(.*)\\.(.+)$/${2}/}', expected: 'js' },
-      { input: '${TM_FILENAME/^(.*)\\.(.+)$/$2-$1/}', expected: 'js-parse' },
-      { input: '${TM_FILENAME/^(.*)\\.(.+)$/${2}-$1/}', expected: 'js-parse' },
-      { input: '${TM_FILENAME/^(.*)\\.(.+)$/${2}-${1}/}', expected: 'js-parse' }
-    ]
-  },
-  {
-    describe: 'helpers',
-    it: 'should apply helpers to the specified match groups',
-    units: [
-      { input: '${TM_FILENAME/^(.*)\\..+$/${0:/upcase}/}', expected: 'PARSE.JS' },
-      { input: '${TM_FILENAME/^(.*)\\..+$/${1:/upcase}/}', expected: 'PARSE' }
-    ]
-  },
   {
     skip: true,
     input: 'errorContext: `${1:err}`, error:$1',
@@ -54,13 +75,6 @@ const fixtures = [
     input: ['errorContext: `$1`, error:${1:err}'],
     tabstops: [{ 1: '' }, { 1: 'foo' }],
     expected: ''
-  },
-  {
-    describe: 'tabstops',
-    units: [
-      { input: '$1', method: 'stringify', expected: '$1' },
-      { input: '\\$1', method: 'stringify', expected: '\\$1' }
-    ]
   },
   {
     describe: 'placeholder transforms',
@@ -117,77 +131,6 @@ const fixtures = [
     ]
   },
   {
-    describe: 'variable transforms',
-    it: 'should respect escaped forward slashes in transform regex',
-    units: [
-      { input: '${TM_DIRECTORY/lib\\//$1/}', expected: '' },
-      { input: '${TM_FILEPATH/lib\\/(.*)$/$1/}', expected: 'parse.js' }
-    ]
-  },
-  {
-    describe: 'variable transforms',
-    it: 'should respect escaped forward slashes in tranform format string',
-    notes: 'Unsure about these',
-    units: [
-      { input: '${TM_FILEPATH/a/\\/$1/g}', expected: '\\/\\/' },
-      { input: '${TM_FILEPATH/a/in\\/$1ner/g}', expected: 'in\\/nerin\\/ner' },
-      { input: '${TM_FILEPATH/a/end\\//g}', expected: 'end\\/end\\/' },
-
-      { input: '${TM_FILEPATH/(a)/\\/$1/g}', expected: '\\/a\\/a' },
-      { input: '${TM_FILEPATH/(a)/in\\/$1ner/g}', expected: 'in\\/anerin\\/aner' },
-      { input: '${TM_FILEPATH/(a)/end\\//g}', expected: 'end\\/end\\/' }
-    ]
-  },
-  {
-    describe: 'variable transforms',
-    units: [
-      { input: '${foo/([A-Z][a-z])/format/}', expected: '' },
-      { input: '${foo///}', expected: '' },
-      { input: '${foo/regex/format/gmi}', expected: '' },
-      { input: '${TM_DIRECTORY/.*[\\/](.*)$/$1/}', expected: 'lib' },
-      { input: '${TM_FILENAME/(.*)/$1/i}', expected: 'parse.js' },
-      { input: '${TM_FILENAME/(.*)/$1/i}', expected: 'parse.js' },
-      { input: '${TM_FILENAME/(.*)/${1}/i}', expected: 'parse.js' },
-      { input: '${TM_FILENAME/(.*)/${1}/i}', expected: 'parse.js' },
-      { input: '${TM_FILENAME/(.*)/complex${1:+if}/i}', expected: 'complexif' },
-      { input: '${TM_FILENAME/(.*)/complex${1:-else}/i}', expected: 'complexparse.js' },
-      { input: '${TM_FILENAME/(.*)/complex${1:/upcase}/i}', expected: 'complexPARSE.JS' },
-      { input: '${TM_FILENAME/(.*)/complex${1:?if:else}/i}', expected: 'complexif' },
-      { input: '${TM_FILENAME/(.*)/complex${1:else}/i}', expected: 'complexparse.js' },
-      { input: '${TM_FILENAME/(.*)/This-$1-encloses/i}', expected: 'This-parse.js-encloses' },
-      { input: '${TM_FILENAME/.*/${0:fooo}/i}', expected: 'parse.js' },
-      { input: '${TM_FILENAME/^(.*)\\..+$/${1:+}/}', expected: 'parse' },
-      { input: '${TM_FILENAME/b.*/${0:xyz}/i}', expected: '' },
-      {
-        it: 'should return entire string when regex is invalid',
-        input: '${foo/([A-Z][a-z])/format/GMI}',
-        expected: '${foo/([A-Z][a-z])/format/GMI}'
-      },
-      {
-        it: 'should return entire string when regex is invalid',
-        input: '${foo/([A-Z][a-z])/format/funky}',
-        expected: '${foo/([A-Z][a-z])/format/funky}'
-      },
-      {
-        it: 'should return entire string when regex is invalid',
-        input: '${foo/([A-Z][a-z]/format/}',
-        expected: '${foo/([A-Z][a-z]/format/}'
-      },
-      { input: '${foo/m\\/atch/$1/i}', expected: '' },
-      { input: '${foo/regex\\/format/options}', expected: '' },
-      {
-        it: 'should not choke on incomplete expressions',
-        input: '${foo///',
-        expected: '${foo///'
-      },
-      {
-        it: 'should not choke on incomplete expressions',
-        input: '${foo/regex/format/options',
-        expected: '${foo/regex/format/options'
-      }
-    ]
-  },
-  {
     describe: 'choices',
     it: 'should parse tabstops with choices',
     units: [
@@ -198,6 +141,7 @@ const fixtures = [
   },
   {
     describe: 'choices',
+    // only: true,
     it: 'should ignore $0',
     units: [
       { input: '${0|foo,bar|}', expected: '${0|foo,bar|}' }
@@ -254,16 +198,6 @@ const fixtures = [
       {
         input: 'console.warn(${1: $TM_SELECTED_TEXT })',
         expected: 'console.warn( FOOBAR )'
-      },
-      {
-        input: 'console.log(${1|not\\, not, five, 5, 1   23|});',
-        method: 'stringify',
-        expected: 'console.log(${1|not\\, not, five, 5, 1   23|});'
-      },
-      {
-        input: 'console.log(${1|not\\, not, \\| five, 5, 1   23|});',
-        method: 'stringify',
-        expected: 'console.log(${1|not\\, not, \\| five, 5, 1   23|});'
       }
     ]
   },
@@ -275,56 +209,6 @@ const fixtures = [
       { skip: true, input: '${1:${foo:one${1}two}}', expected: 'onetwo' },
       { input: '${1:${foo:${1}}}', expected: 'abc', tabstops: { 1: 'abc' } }
     ]
-  },
-  {
-    describe: '.stringify()',
-    units: [
-      {
-        input: 'this is text',
-        method: 'stringify',
-        expected: 'this is text'
-      },
-      {
-        input: 'this ${1:is ${2:nested with $var}}',
-        method: 'stringify',
-        expected: 'this ${1:is ${2:nested with $var}}'
-      },
-      {
-        input: 'this ${1:is ${2:nested with $var}}}',
-        method: 'stringify',
-        expected: 'this ${1:is ${2:nested with $var}}}'
-      },
-      {
-        input: 'console.log(${1|not\\, not, five, 5, 1   23|});',
-        expected: 'console.log(${1|not\\, not, five, 5, 1   23|});',
-        method: 'stringify'
-      },
-      {
-        input: 'console.log(${1|not\\, not, \\| five, 5, 1   23|});',
-        expected: 'console.log(${1|not\\, not, \\| five, 5, 1   23|});',
-        method: 'stringify'
-      },
-      {
-        input: 'this is text',
-        expected: 'this is text',
-        method: 'stringify'
-      },
-      {
-        input: 'this ${1:is ${2:nested with $var}}',
-        expected: 'this ${1:is ${2:nested with $var}}',
-        method: 'stringify'
-      },
-      {
-        input: 'this ${1:is ${2:nested with $var}}}',
-        expected: 'this ${1:is ${2:nested with $var}}}',
-        method: 'stringify'
-      },
-      {
-        input: 'this ${1:is ${2:nested with $var}} and repeating $1',
-        expected: 'this ${1:is ${2:nested with $var}} and repeating $1',
-        method: 'stringify'
-      }
-    ]
   }
 ];
 
@@ -334,26 +218,27 @@ const render = (input, options = {}, tabstops, data) => {
   let ast = parse(input);
 
   if (options.method) {
-    return ast[options.method]();
+    return ast[options.method](options);
   }
 
   let fn = ast.compile(options);
-  let result = fn({ ...process.env, ...data }, tabstops);
-  // console.log([input, result]);
-  return result;
+  return fn({ ...process.env, ...data }, tabstops);
 };
 
 let count = 0;
+const getOnly = arr => {
+  for (let ele of arr) {
+    if (ele.only === true) {
+      return ele;
+    }
+    if (ele.units) {
+      let unit = getOnly(ele.units);
+      if (unit) return unit;
+    }
+  }
+};
 
-const only = fixtures.find(ele => {
-  if (ele.only === true) {
-    return ele;
-  }
-  if (ele.units) {
-    return ele.units.find(e => e.only === true);
-  }
-  return false;
-});
+const only = getOnly(fixtures);
 
 const unit = fixture => {
   if (fixture.skip !== true) {
@@ -372,10 +257,18 @@ const unit = fixture => {
     }
 
     const options = { method: fixture.method };
+    if (process.env.DEBUG) {
+      options.formatters = formatters;
+    }
+
     const actual = render(fixture.input, options, tabstops, fixture.data);
+    const plain = colors.unstyle(actual).replace(/(<+|>+)/g, '');
+
     console.log(' INPUT =>', [fixture.input]);
-    console.log('OUTPUT =>', [actual, fixture.expected]);
-    assert.equal(actual, fixture.expected);
+    console.log('OUTPUT =>', [plain, fixture.expected]);
+    console.log('COLORS =>', actual);
+    assert.equal(plain, fixture.expected);
+
     console.log();
   }
 };

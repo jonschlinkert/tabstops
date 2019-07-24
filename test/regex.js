@@ -2,7 +2,7 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const { INSERTION_RE, REGEX_FORMAT_RE } = require('../lib/constants');
+const { INSERTION_REGEX, FORMAT_STRING_REGEX } = require('../lib/constants');
 
 const matcher = regex => {
   return input => {
@@ -19,8 +19,8 @@ const matcher = regex => {
 };
 
 describe('constants - regular expressions', () => {
-  describe('INSERTION_RE', () => {
-    const match = matcher(INSERTION_RE);
+  describe('INSERTION_REGEX', () => {
+    const match = matcher(INSERTION_REGEX);
 
     it('should match insertions', () => {
       assert.deepEqual(match('(?1:foo)'), ['(?1:foo)', '1', 'foo']);
@@ -31,11 +31,14 @@ describe('constants - regular expressions', () => {
     });
   });
 
-  describe('REGEX_FORMAT_RE', () => {
-    const match = matcher(REGEX_FORMAT_RE);
+  describe('FORMAT_STRING_REGEX', () => {
+    const match = matcher(FORMAT_STRING_REGEX);
 
-    it.skip('should match replacers', () => {
-
+    it('should match replacers', () => {
+      assert.deepEqual(match('$2-'), ['$2', '2', undefined, undefined]);
+      assert.deepEqual(match('${2}'), ['${2}', undefined, '2', undefined, '']);
+      assert.deepEqual(match('${1/upcase}'), ['${1/upcase}', undefined, '1', '/', 'upcase']);
+      assert.deepEqual(match('${1:?It is:It is not}'), ['${1:?It is:It is not}', undefined, '1', ':?', 'It is:It is not']);
     });
   });
 });

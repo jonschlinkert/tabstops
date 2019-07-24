@@ -67,38 +67,4 @@ describe('choices', () => {
       assert(stringify('${1|\\,,},$,\\|,\\\\|}'));
     });
   });
-
-  describe('outer', () => {
-    const output = input => {
-      return parse(input).outer() === input;
-    };
-
-    it('should get the outer string for choices', () => {
-      assert(output('foo ${TM_FILENAME|one,two,three|} bar'));
-      assert(output('foo ${1|one,two,three|} bar'));
-      assert(output('foo \\${1|one,two,three|} bar'));
-      assert(output('foo ${1|one,  two,    three|} bar'));
-      assert(output('foo ${1|one\\,  two,    three|} bar'));
-      assert(output('foo ${1|one\\,  two \\| three|} bar'));
-      assert(output('foo ${1|\\,,},$,\\|,\\\\|} bar'));
-    });
-  });
-
-  describe('inner', () => {
-    const output = input => {
-      return parse(input).nodes[0].inner() === input.slice(2, -1);
-    };
-
-    it('should get the inner string for choices', () => {
-      assert(output('${1|one,two,three|}'));
-      assert(output('${1|one,  two,    three|}'));
-      assert(output('${1|one\\,  two,    three|}'));
-      assert(output('${1|one\\,  two \\| three|}'));
-      assert(output('${1|\\,,},$,\\|,\\\\|}'));
-    });
-  });
-
-  describe('compile', () => {
-
-  });
 });

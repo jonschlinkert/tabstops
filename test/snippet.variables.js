@@ -9,14 +9,13 @@ const parse = input => {
   const snippet = new Snippet(input);
   const ast = snippet.parse();
   ast.visit(node => {
-    node.range = node.loc.range;
-    define(node, 'tabstops', node.tabstops);
-    define(node, 'source', node.source);
-    define(node, 'open', node.open);
-    define(node, 'loc', node.loc);
-    if (node.variable) delete node.value;
-    delete node.close;
-    node.replace(node);
+    if (node.loc) node.range = node.loc.range;
+    delete node.loc;
+    delete node.fields;
+    delete node.match;
+    delete node.compile;
+    delete node.source;
+    delete node.tabstops;
   });
   return ast;
 };
@@ -29,7 +28,7 @@ describe('variables', () => {
         range: [0, 20],
         nodes: [
           { type: 'text', range: [0, 4], value: 'foo ' },
-          { type: 'variable', range: [4, 16], variable: 'TM_FILEPATH' },
+          { type: 'variable', range: [4, 16], name: 'TM_FILEPATH', value: '$TM_FILEPATH' },
           { type: 'text', range: [16, 20], value: ' bar' }
         ]
       });
@@ -50,13 +49,12 @@ describe('variables', () => {
         nodes: [
           { type: 'text', range: [0, 7], value: 'textbf{' },
           {
-            type: 'placeholder',
+            type: 'variable_placeholder',
             range: [7, 47],
-            variable: 'TM_SELECTED_TEXT',
             nodes: [
               {
                 range: [7, 26],
-                type: 'open_brace',
+                type: 'open',
                 value: '${TM_SELECTED_TEXT:'
               },
               {
@@ -66,7 +64,7 @@ describe('variables', () => {
               },
               {
                 range: [46, 47],
-                type: 'close_brace',
+                type: 'close',
                 value: '}'
               }
             ]
@@ -76,7 +74,7 @@ describe('variables', () => {
       });
     });
 
-    it('should parse an alphanumeric tabstop variable', () => {
+    it('should parse an alphanumeric tabstop variable 1', () => {
       let ast = parse('foo $FOO123BAR bar');
 
       assert.deepEqual(ast, {
@@ -84,21 +82,7 @@ describe('variables', () => {
         range: [0, 18],
         nodes: [
           { type: 'text', range: [0, 4], value: 'foo ' },
-          { type: 'variable', range: [4, 14], variable: 'FOO123BAR' },
-          { type: 'text', range: [14, 18], value: ' bar' }
-        ]
-      });
-    });
-
-    it('should parse an alphanumeric tabstop variable', () => {
-      let ast = parse('foo $FOO123BAR bar');
-
-      assert.deepEqual(ast, {
-        type: 'root',
-        range: [0, 18],
-        nodes: [
-          { type: 'text', range: [0, 4], value: 'foo ' },
-          { type: 'variable', range: [4, 14], variable: 'FOO123BAR' },
+          { type: 'variable', range: [4, 14], name: 'FOO123BAR', value: '$FOO123BAR' },
           { type: 'text', range: [14, 18], value: ' bar' }
         ]
       });
@@ -112,7 +96,7 @@ describe('variables', () => {
         range: [0, 19],
         nodes: [
           { type: 'text', range: [0, 4], value: 'foo ' },
-          { type: 'variable', range: [4, 14], variable: 'FOO123BAR' },
+          { type: 'variable', range: [4, 14], name: 'FOO123BAR', value: '$FOO123BAR' },
           { type: 'text', range: [14, 19], value: '} bar' }
         ]
       });
@@ -126,7 +110,7 @@ describe('variables', () => {
         range: [0, 20],
         nodes: [
           { type: 'text', range: [0, 4], value: 'foo ' },
-          { type: 'variable', range: [4, 14], variable: 'FOO123BAR' },
+          { type: 'variable', range: [4, 14], name: 'FOO123BAR', value: '$FOO123BAR' },
           { type: 'text', range: [14, 20], value: '\\} bar' }
         ]
       });
@@ -140,9 +124,9 @@ describe('variables', () => {
         range: [0, 25],
         nodes: [
           { type: 'text', range: [0, 4], value: 'foo ' },
-          { type: 'variable', range: [4, 14], variable: 'FOO123BAR' },
+          { type: 'variable', range: [4, 14], name: 'FOO123BAR', value: '$FOO123BAR' },
           { type: 'text', range: [14, 21], value: '\\}\nbar\n' },
-          { type: 'variable', range: [21, 25], variable: 'BAZ' }
+          { type: 'variable', range: [21, 25], name: 'BAZ', value: '$BAZ' }
         ]
       });
     });
@@ -151,54 +135,19 @@ describe('variables', () => {
   describe('stringify', () => {
     const stringify = (input, fn, expected = input) => {
       let ast = parse(input);
-      let output = (fn ? fn(ast) : ast).stringify();
+      let node = (fn ? fn(ast) : ast);
+      let output = node.stringify();
       return [output, expected];
     };
 
     it('should stringify variable nodes', () => {
-      const find = ast => ast.find('placeholder');
+      const find = ast => ast.find('variable_placeholder');
       assert.equal(...stringify('textbf{${TM_SELECTED_TEXT:no text was selected}}', find, '${TM_SELECTED_TEXT:no text was selected}'));
       assert.equal(...stringify('textbf{${TM_SELECTED_TEXT:no text was selected}}'));
       assert.equal(...stringify('foo $FOO123BAR bar'));
       assert.equal(...stringify('foo $FOO123BAR} bar'));
       assert.equal(...stringify('foo $FOO123BAR\\} bar'));
       assert.equal(...stringify('foo $FOO123BAR\\}\nbar\n$BAZ'));
-    });
-  });
-
-  describe('toString', () => {
-    const toString = (input, fn, expected = input) => {
-      let ast = parse(input);
-      let output = (fn ? fn(ast) : ast).toString();
-      return [output, expected];
-    };
-
-    it('should toString variable nodes', () => {
-      const find = ast => ast.find('placeholder');
-      assert.equal(...toString('textbf{${TM_SELECTED_TEXT:no text was selected}}', find, '${TM_SELECTED_TEXT:no text was selected}'));
-      assert.equal(...toString('textbf{${TM_SELECTED_TEXT:no text was selected}}'));
-      assert.equal(...toString('foo $FOO123BAR bar'));
-      assert.equal(...toString('foo $FOO123BAR} bar'));
-      assert.equal(...toString('foo $FOO123BAR\\} bar'));
-      assert.equal(...toString('foo $FOO123BAR\\}\nbar\n$BAZ'));
-    });
-  });
-
-  describe('outer', () => {
-    const outer = (input, fn, expected = input) => {
-      let ast = parse(input);
-      let actual = (fn ? fn(ast) : ast).outer();
-      return [actual, expected];
-    };
-
-    it('should outer variable nodes', () => {
-      const find = ast => ast.find('placeholder');
-      assert.equal(...outer('textbf{${TM_SELECTED_TEXT:no text was selected}}', find, '${TM_SELECTED_TEXT:no text was selected}'));
-      assert.equal(...outer('textbf{${TM_SELECTED_TEXT:no text was selected}}'));
-      assert.equal(...outer('foo $FOO123BAR bar'));
-      assert.equal(...outer('foo $FOO123BAR} bar'));
-      assert.equal(...outer('foo $FOO123BAR\\} bar'));
-      assert.equal(...outer('foo $FOO123BAR\\}\nbar\n$BAZ'));
     });
   });
 
@@ -274,7 +223,7 @@ describe('variables', () => {
       ],
       [
         'foo ${FOO123BAR.} bar',
-        undefined
+        'FOO123BAR.'
       ],
       [
         'foo \\$FOO123BAR bar',

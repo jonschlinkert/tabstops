@@ -2,7 +2,7 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const Snippet = require('../lib/Snippet');
+const { Snippet, compile } = require('../lib/Snippet');
 const { format } = require('../lib/utils');
 
 const parse = input => {
@@ -18,6 +18,14 @@ const render = (input, expected) => {
   } catch (err) {
     console.log(err);
     throw err;
+  }
+};
+
+const inner = input => {
+  let ast = parse(input);
+  let node = ast.nodes.find(n => n.type !== 'text');
+  if (node) {
+    return node.inner();
   }
 };
 
@@ -47,6 +55,30 @@ describe('placeholders', () => {
       const ast = parse('<${TM_FILENAME:This is a placeholder}>');
       const fn = ast.compile();
       assert.equal(fn(), '<This is a placeholder>');
+    });
+  });
+
+  describe('vscode tests', () => {
+    it('Parser, valid placeholder with defaults', () => {
+      assert.equal(compile('${1:value}')(), 'value');
+    });
+
+    it('Parser, invalid transform', () => {
+      assert.equal(compile('${TM_FILENAME/(\\w+)\\.js/$1/g${2:foobar}')(), '${TM_FILENAME/(\\w+)\\.js/$1/g${2:foobar}');
+    });
+
+    it('Parser, invalid placeholder with defaults', () => {
+      assert.equal(compile('${1:bar${2:foo}bar}')(), 'barfoobar');
+      assert.equal(compile('${1:bar${2:foobar}')(), '${1:barfoobar');
+    });
+
+    it('Parser, valid variables with defaults', () => {
+      assert.equal(compile('${name:value}')(), 'value');
+    });
+
+    it('Parser, invalid variables with defaults', () => {
+      assert.equal(compile('${name:value')(), '${name:value');
+      assert.equal(compile('${a:bar${b:foobar}')(), '${a:barfoobar');
     });
   });
 
@@ -130,14 +162,6 @@ describe('placeholders', () => {
   });
 
   describe('inner', () => {
-    const inner = input => {
-      let ast = parse(input);
-      let node = ast.nodes.find(n => n.type !== 'text');
-      if (node) {
-        return node.inner();
-      }
-    };
-
     const fixtures = [
       [
         'foo{${1:default}}bar',
@@ -182,14 +206,6 @@ describe('placeholders', () => {
   });
 
   describe('escaped', () => {
-    const inner = input => {
-      let ast = parse(input);
-      let node = ast.nodes.find(n => n.type !== 'text');
-      if (node) {
-        return node.inner();
-      }
-    };
-
     const fixtures = [
       [
         'foo \\${1} bar',
@@ -201,7 +217,7 @@ describe('placeholders', () => {
       ],
       [
         'foo ${1.} bar',
-        undefined
+        '1.'
       ],
       [
         'foo \\$1 bar',
