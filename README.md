@@ -94,15 +94,15 @@ The following sample inserts the name of the current file without its ending, so
 ${<variable>/<regexp>/<format>/<options>}
 ${TM_FILENAME/(.*)\..+$/$1/gim}
   |           |         |  |
-
+  |           |         |  |-> options (regex flags)
   |           |         |
-
+  |           |         |-> references the contents of the first
   |           |             capture group
   |           |
-
+  |           |-> regex to capture everything before
   |               the final `.suffix`
   |
-
+  |-> resolves to the filename
 ```
 
 ### Placeholder-Transform
@@ -121,18 +121,18 @@ The following sample removes an underscore at the beginning of the text, so that
 ${1/^_(.*)/$1/g}
   |   |    |  |-> Options (regex flags)
   |   |    |
-
+  |   |    |-> Replace it with the first capture group
   |   |
-
+  |   |-> Regular expression to capture everything after the underscore
   |
-
+  |-> Placeholder Index
 ```
 
 ### Grammar
 
 Below is the EBNF for snippets. With `\` (backslash) you can escape `$`, `}` and `\`, within choice elements the backslash also escapes comma and pipe characters.
 
-```g4
+```
 placeholder ::= tabstop | choice | variable | text
 tabstop     ::= '$' int
                 | '${' int '}'
