@@ -1,6 +1,6 @@
 # tabstops [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=W8YFZ425KND68) [![NPM version](https://img.shields.io/npm/v/tabstops.svg?style=flat)](https://www.npmjs.com/package/tabstops) [![NPM monthly downloads](https://img.shields.io/npm/dm/tabstops.svg?style=flat)](https://npmjs.org/package/tabstops) [![NPM total downloads](https://img.shields.io/npm/dt/tabstops.svg?style=flat)](https://npmjs.org/package/tabstops) [![Linux Build Status](https://img.shields.io/travis/jonschlinkert/tabstops.svg?style=flat&label=Travis)](https://travis-ci.org/jonschlinkert/tabstops)
 
-> My awesome node.js project
+> JavaScript library and API for parsing, compiling and rendering snippets with tabstops.
 
 Please consider following this project's author, [Jon Schlinkert](https://github.com/jonschlinkert), and consider starring the project to show your :heart: and support.
 
@@ -16,7 +16,22 @@ $ npm install --save tabstops
 
 ```js
 const TabStops = require('tabstops');
+
+// pass a string as the first argument 
+const tabstops = new Tabstops('console.log("$1");');
+
+console.log(tabstops.render()); //=> 'console.log("");'
+
+tabstops.set(1, 'It worked!');
+console.log(tabstops.render()); //=> 'console.log("It worked!");'
+
+tabstops.set(2, 'Warning!');
+console.log(tabstops.render()); //=> 'console.log("Warning!");'
 ```
+
+## Docs
+
+WIP - docs are on the way!!!
 
 ## About
 
