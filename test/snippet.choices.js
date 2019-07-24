@@ -2,11 +2,7 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const Snippet = require('../lib/Snippet');
-const parse = input => {
-  const snippet = new Snippet(input);
-  return snippet.parse();
-};
+const { parse } = require('../lib/Snippet');
 
 const choices = (input, fn) => {
   const ast = parse(input);
@@ -65,6 +61,66 @@ describe('choices', () => {
       assert(stringify('${1|one\\,  two,    three|}'));
       assert(stringify('${1|one\\,  two \\| three|}'));
       assert(stringify('${1|\\,,},$,\\|,\\\\|}'));
+    });
+  });
+
+  describe('transforms', () => {
+    it('should work with transforms', () => {
+      const input = [
+        'placeholder thing ${1:this}',
+        'choice thing ${2|this,that,other|}',
+        'transform placeholder ${1/(this)|(that)|(other)/${1:+1}${2:+2}${3:+3}/}',
+        'transform placeholder ${2/(this)|(that)|(other)/${1:+1}${2:+2}${3:+3}/}',
+        '$0'
+      ].join('\n');
+
+      const tabstops = new Map();
+      const ast = parse(input, { tabstops });
+      const node = ast.find('choices');
+      const fn = ast.compile();
+      const nfn = node.compile();
+
+      tabstops.set(1, 'that');
+
+      assert.equal(fn(), [
+        'placeholder thing that',
+        'choice thing this',
+        'transform placeholder 2',
+        'transform placeholder 1',
+        ''
+      ].join('\n'));
+
+      tabstops.set(0, 'AFTER');
+
+      assert.equal(fn(), [
+        'placeholder thing that',
+        'choice thing this',
+        'transform placeholder 2',
+        'transform placeholder 1',
+        'AFTER'
+      ].join('\n'));
+
+      tabstops.set(1, 'other');
+
+      assert.equal(fn(), [
+        'placeholder thing other',
+        'choice thing this',
+        'transform placeholder 3',
+        'transform placeholder 1',
+        'AFTER'
+      ].join('\n'));
+
+      node.choose(0);
+      assert.equal(nfn(), 'this');
+
+      node.choose(1);
+      assert.equal(nfn(), 'that');
+
+      node.choose(2);
+      assert.equal(nfn(), 'other');
+
+      node.choose(3);
+      assert.equal(nfn(), '');
     });
   });
 });

@@ -79,7 +79,7 @@ describe('transforms', () => {
       assert.equal(node.inner(), '1/(.)/${1}/g');
     });
 
-    it.only('should use placeholder values', () => {
+    it('should use placeholder values', () => {
       const input = 'errorContext: `${1:err}`, error:${1/err/ok/}';
       assert.equal(render(input), 'errorContext: `err`, error:ok');
     });
