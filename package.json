@@ -1,6 +1,6 @@
 {
   "name": "tabstops",
-  "description": "My awesome node.js project",
+  "description": "JavaScript library and API for parsing, compiling and rendering snippets with tabstops.",
   "version": "0.1.0",
   "homepage": "https://github.com/jonschlinkert/tabstops",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -19,14 +19,23 @@
     "tabstop",
     "tabstops"
   ],
-  "dependencies": {
-    "ansi-colors": "^4.1.1",
-    "enquirer": "file:../@enquirer/enquirer-3.0.0",
-    "log-update": "^3.2.0",
-    "picomatch": "^2.0.7"
-  },
   "devDependencies": {
+    "ansi-colors": "^4.1.1",
+    "gulp-format-md": "^2.0.0",
     "mocha": "^6.1.4",
     "prettier": "^1.18.2"
+  },
+  "verb": {
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
+    "lint": {
+      "reflinks": true
+    }
   }
 }
