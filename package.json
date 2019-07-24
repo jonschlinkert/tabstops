@@ -1,7 +1,7 @@
 {
   "name": "tabstops",
   "description": "JavaScript library and API for parsing, compiling and rendering snippets with tabstops.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/jonschlinkert/tabstops",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/tabstops",
