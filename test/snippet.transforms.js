@@ -3,7 +3,7 @@
 require('mocha');
 const path = require('path');
 const assert = require('assert').strict;
-const { parse, render } = require('../lib/Snippet');
+const { parse, render } = require('../lib/Parser');
 const data = {
   TM_DIRECTORY: __dirname,
   TM_FILENAME: 'parse.js',

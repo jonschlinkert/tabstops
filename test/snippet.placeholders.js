@@ -2,11 +2,11 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const { Snippet, compile } = require('../lib/Snippet');
+const { Parser, compile } = require('../lib/Parser');
 const { format } = require('../lib/utils');
 
 const parse = input => {
-  const snippet = new Snippet(input);
+  const snippet = new Parser(input);
   return snippet.parse();
 };
 
@@ -109,7 +109,7 @@ describe('placeholders', () => {
     let snippet, ast;
 
     beforeEach(() => {
-      snippet = new Snippet('<${1:This is a placeholder}>');
+      snippet = new Parser('<${1:This is a placeholder}>');
       ast = snippet.parse();
     });
 
@@ -140,7 +140,7 @@ describe('placeholders', () => {
     let snippet, ast;
 
     beforeEach(() => {
-      snippet = new Snippet('<${1:This is a placeholder}>');
+      snippet = new Parser('<${1:This is a placeholder}>');
       ast = snippet.parse();
     });
 

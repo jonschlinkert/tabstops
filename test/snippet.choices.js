@@ -2,7 +2,7 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const { parse } = require('../lib/Snippet');
+const { parse } = require('../lib/Parser');
 
 const choices = (input, fn) => {
   const ast = parse(input);

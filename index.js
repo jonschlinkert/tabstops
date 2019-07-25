@@ -1,8 +1,8 @@
 'use strict';
 
-const Snippet = require('./lib/Snippet');
+const Parser = require('./lib/Parser');
 
-class Tabstops extends Snippet {
+class Tabstops extends Parser {
   set(n, value) {
     this.tabstops.set(n, value);
     return this;

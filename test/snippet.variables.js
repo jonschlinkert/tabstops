@@ -2,11 +2,11 @@
 
 require('mocha');
 const assert = require('assert');
-const Snippet = require('../lib/Snippet');
+const Parser = require('../lib/Parser');
 const { define, format } = require('../lib/utils');
 
 const parse = input => {
-  const snippet = new Snippet(input);
+  const snippet = new Parser(input);
   const ast = snippet.parse();
   ast.visit(node => {
     if (node.loc) node.range = node.loc.range;

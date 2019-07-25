@@ -2,7 +2,7 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const { parse, compile, render } = require('../lib/Snippet');
+const { parse, compile, render } = require('../lib/Parser');
 let tabstops;
 
 describe('compile', () => {

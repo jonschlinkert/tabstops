@@ -2,7 +2,7 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const { parse, compile } = require('../lib/Snippet');
+const { parse, compile } = require('../lib/Parser');
 
 const render = (input, data) => {
   const fn = compile(input);

@@ -2,10 +2,10 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const Snippet = require('../lib/snippet');
+const Parser = require('../lib/Parser');
 
 const stringify = input => {
-  let snippet = new Snippet(input);
+  let snippet = new Parser(input);
   let ast = snippet.parse();
   return ast.stringify();
 };
