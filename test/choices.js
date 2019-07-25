@@ -74,13 +74,13 @@ describe('choices', () => {
         '$0'
       ].join('\n');
 
-      const tabstops = new Map();
-      const ast = parse(input, { tabstops });
+      const stops = new Map();
+      const ast = parse(input, { stops });
       const node = ast.find('choices');
       const fn = ast.compile();
       const nfn = node.compile();
 
-      tabstops.set(1, 'that');
+      stops.set(1, 'that');
 
       assert.equal(fn(), [
         'placeholder thing that',
@@ -90,7 +90,7 @@ describe('choices', () => {
         ''
       ].join('\n'));
 
-      tabstops.set(0, 'AFTER');
+      stops.set(0, 'AFTER');
 
       assert.equal(fn(), [
         'placeholder thing that',
@@ -100,7 +100,7 @@ describe('choices', () => {
         'AFTER'
       ].join('\n'));
 
-      tabstops.set(1, 'other');
+      stops.set(1, 'other');
 
       assert.equal(fn(), [
         'placeholder thing other',

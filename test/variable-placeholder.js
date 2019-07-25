@@ -63,11 +63,15 @@ describe('variable placeholders', () => {
     });
   });
 
-  describe('defaults', () => {
-    it('should render default values', () => {
+  describe('placeholders', () => {
+    it('should render placeholder values', () => {
       assert.equal(...render('${name:value}', 'value'));
       assert.equal(...render('${1:value}', 'value'));
       assert.equal(...render('${1:bar${2:foo}bar}', 'barfoobar'));
+    });
+
+    it('should not use placeholders defined on previous same-name vars', () => {
+      assert.equal(...render('${foo:bar} $foo', 'bar foo'));
     });
   });
 

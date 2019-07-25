@@ -19,6 +19,7 @@ const parse = input => {
     delete node.compile;
     delete node.source;
     delete node.tabstops;
+    delete node.names;
     delete node.stops;
     delete node.initial;
   });
@@ -38,6 +39,14 @@ const tokens = input => {
   });
 
   return arr;
+};
+
+const inner = input => {
+  let ast = parse(input);
+  let node = ast.nodes.find(n => n.type !== 'text');
+  if (node) {
+    return node.inner();
+  }
 };
 
 describe('variables', () => {
@@ -68,6 +77,8 @@ describe('variables', () => {
           {
             type: 'variable_placeholder',
             range: [7, 47],
+            name: 'TM_SELECTED_TEXT',
+            value: '${TM_SELECTED_TEXT:',
             nodes: [
               {
                 range: [7, 26],
@@ -76,7 +87,7 @@ describe('variables', () => {
               },
               {
                 range: [26, 46],
-                type: 'placeholder',
+                type: 'text',
                 value: 'no text was selected'
               },
               {
@@ -169,14 +180,6 @@ describe('variables', () => {
   });
 
   describe('inner', () => {
-    const inner = input => {
-      let ast = parse(input);
-      let node = ast.nodes.find(n => n.type !== 'text');
-      if (node) {
-        return node.inner();
-      }
-    };
-
     const fixtures = [
       [
         'textbf{${TM_SELECTED_TEXT:no text was selected}}',
@@ -221,14 +224,6 @@ describe('variables', () => {
   });
 
   describe('escaped', () => {
-    const inner = input => {
-      let ast = parse(input);
-      let node = ast.nodes.find(n => n.type !== 'text');
-      if (node) {
-        return node.inner();
-      }
-    };
-
     const fixtures = [
       [
         'foo \\${FOO123BAR} bar',
@@ -240,7 +235,7 @@ describe('variables', () => {
       ],
       [
         'foo ${FOO123BAR.} bar',
-        'FOO123BAR.'
+        undefined
       ],
       [
         'foo \\$FOO123BAR bar',

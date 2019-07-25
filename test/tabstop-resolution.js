@@ -10,7 +10,7 @@ const render = (input, data, stop) => {
   let fn = ast.compile();
 
   if (Array.isArray(stop)) {
-    parser.tabstops.set(...stop);
+    parser.stops.set(...stop);
   }
 
   return fn(data);
@@ -23,7 +23,7 @@ const create = (input, options) => {
 
   return {
     set(...args) {
-      parser.tabstops.set(...args);
+      parser.stops.set(...args);
     },
     render(data) {
       return fn(data);
@@ -32,7 +32,7 @@ const create = (input, options) => {
 };
 
 describe('tabstop resolution', () => {
-  it('should return an empty string for undefined tabstops', () => {
+  it('should return an empty string for undefined stops', () => {
     assert.equal(render('foo $1 bar'), 'foo  bar');
     assert.equal(render('foo $1 $1 $1 bar'), 'foo    bar');
     assert.equal(render('foo $1 $2 $3 bar'), 'foo    bar');

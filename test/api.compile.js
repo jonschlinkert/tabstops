@@ -3,7 +3,7 @@
 require('mocha');
 const assert = require('assert').strict;
 const { parse, compile } = require('../lib/Parser');
-let tabstops;
+let stops;
 
 describe('compile', () => {
   describe('from vscode', () => {
@@ -31,9 +31,9 @@ describe('compile', () => {
     });
 
     it('Parser, variables/tabstop', () => {
-      let data = { TM_SELECTED_TEXT: '' };
+      let data = { TM_SELECTED_TEXT: '', far: '' };
       assert.equal(compile('$far boo')(), 'far boo');
-      assert.equal(compile('$far boo')({ far: '' }), ' boo');
+      assert.equal(compile('$far boo')(data), 'far boo');
       assert.equal(compile('$far-boo')(), 'far-boo');
       assert.equal(compile('\\$far-boo')(), '\\$far-boo');
       assert.equal(compile('far$farboo')(), 'farfarboo');
@@ -43,7 +43,14 @@ describe('compile', () => {
       assert.equal(compile('$far12boo')(), 'far12boo');
       assert.equal(compile('000_${far}_000')(), '000_far_000');
       assert.equal(compile('FFF_${TM_SELECTED_TEXT}_FFF$0')(), 'FFF_TM_SELECTED_TEXT_FFF');
-      assert.equal(compile('FFF_${TM_SELECTED_TEXT}_FFF$0')(data), 'FFF__FFF');
+      assert.equal(compile('FFF_${TM_SELECTED_TEXT}_FFF$0')(data), 'FFF_TM_SELECTED_TEXT_FFF');
+    });
+  });
+
+  describe('invalid', () => {
+    it('should handle invalid expressions', () => {
+      assert.equal(compile('foo ${name bar')(), 'foo ${name bar');
+      assert.equal(compile('${name')(), '${name');
     });
   });
 
@@ -53,6 +60,45 @@ describe('compile', () => {
       assert.equal(compile('foo $name bar')(), 'foo name bar');
       assert.equal(compile('${name}')(), 'name');
       assert.equal(compile('$name')(), 'name');
+    });
+
+    it('should support dots in variables', () => {
+      let opts = { dotVariables: true };
+      assert.equal(compile('${first.name}', opts)(), 'first.name');
+      assert.equal(compile('$first.name', opts)(), 'first.name');
+      assert.equal(compile('foo ${first.name} bar', opts)(), 'foo first.name bar');
+      assert.equal(compile('foo $first.name bar', opts)(), 'foo first.name bar');
+    });
+
+    it('should not support leading or trailing dots in variables', () => {
+      let opts = { dotVariables: true };
+      assert.equal(compile('$name.', opts)(), 'name.');
+      assert.equal(compile('Name: $name.')({ name: 'Brian' }), 'Name: Brian.');
+      assert.equal(compile('$.name', opts)(), '$.name');
+      assert.equal(compile('$.name.', opts)(), '$.name.');
+      assert.equal(compile('foo $.name bar', opts)(), 'foo $.name bar');
+      assert.equal(compile('foo $name. bar', opts)(), 'foo name. bar');
+      assert.equal(compile('Name: $name. ...', opts)({ name: 'Brian' }), 'Name: Brian. ...');
+    });
+
+    it('should resolve nested variables', () => {
+      let opts = { dotVariables: true };
+      let data = { first: { name: 'Brian' } };
+
+      assert.equal(compile('${first.name}', opts)(data), 'Brian');
+      assert.equal(compile('$first.name', opts)(data), 'Brian');
+      assert.equal(compile('foo ${first.name} bar', opts)(data), 'foo Brian bar');
+      assert.equal(compile('foo $first.name bar', opts)(data), 'foo Brian bar');
+    });
+
+    it('should not resolve nested variables when dotVariables is disabled', () => {
+      let opts = { dotVariables: false };
+      let data = { first: { name: 'Brian' } };
+
+      assert.equal(compile('${first.name}', opts)(data), '${first.name}');
+      assert.equal(compile('$first.name', opts)(data), 'first.name');
+      assert.equal(compile('foo ${first.name} bar', opts)(data), 'foo ${first.name} bar');
+      assert.equal(compile('foo $first.name bar', opts)(data), 'foo first.name bar');
     });
 
     it('should render a variable using a value from the context', () => {
@@ -97,34 +143,34 @@ describe('compile', () => {
 
   describe('tabstops', () => {
     beforeEach(() => {
-      tabstops = new Map();
+      stops = new Map();
     });
 
     it('should render a tabstop using a value from the context', () => {
-      tabstops.set(1, 'OneTwo');
-      assert.equal(compile('${1}', { tabstops })(), 'OneTwo');
+      stops.set(1, 'OneTwo');
+      assert.equal(compile('${1}', { stops })(), 'OneTwo');
     });
 
     it('should return an empty string when no values are defined', () => {
-      assert.equal(compile('${1}', { tabstops })(), '');
+      assert.equal(compile('${1}', { stops })(), '');
     });
   });
 
   describe('tabstops with placeholders', () => {
     beforeEach(() => {
-      tabstops = new Map();
+      stops = new Map();
     });
 
     it('should render a tabstop using a value from the context', () => {
-      assert.equal(compile('${1:${name}}', { tabstops })({ name: 'FooBar' }), 'FooBar');
+      assert.equal(compile('${1:${name}}', { stops })({ name: 'FooBar' }), 'FooBar');
     });
 
     it('should render a tabstop using its placeholder value', () => {
-      assert.equal(compile('${1:AbcXyz}', { tabstops })(), 'AbcXyz');
+      assert.equal(compile('${1:AbcXyz}', { stops })(), 'AbcXyz');
     });
 
     it('should return the tabstop name when no values are defined', () => {
-      assert.equal(compile('${1}', { tabstops })(), '');
+      assert.equal(compile('${1}', { stops })(), '');
     });
   });
 });
