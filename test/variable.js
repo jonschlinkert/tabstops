@@ -76,7 +76,7 @@ describe('variables', () => {
               },
               {
                 range: [26, 46],
-                type: 'text',
+                type: 'placeholder',
                 value: 'no text was selected'
               },
               {
