@@ -6,7 +6,7 @@ const { render } = require('../lib/Parser');
 
 describe('api - variables', () => {
   it('should expose variables from the context', () => {
-    let data = { TM_LINE_NUMBER: 10, FILE_NAME: 'AbCdE.FgH', USERNAME: process.env.USER };
+    let data = { TM_LINE_NUMBER: 10, FILE_NAME: 'AbCdE.FgH', USERNAME: 'jonschlinkert' };
     assert.equal(render('${TM_LINE_NUMBER/(10)/${1:+It is}/} line 10', data), 'It is line 10');
     assert.equal(render('${TM_LINE_NUMBER/(10)/${1:?It is:It is not}/} line 10', data), 'It is line 10');
     assert.equal(render('${TM_LINE_NUMBER/(11)/${1:?It is:It is not}/} line 11', data), 'It is not line 11');
