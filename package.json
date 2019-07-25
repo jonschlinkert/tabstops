@@ -11,7 +11,10 @@
   "engines": {
     "node": ">=8"
   },
-  "files": ["index.js", "lib"],
+  "files": [
+    "index.js",
+    "lib"
+  ],
   "license": "MIT",
   "scripts": {
     "test": "mocha"

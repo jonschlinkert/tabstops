@@ -2,7 +2,7 @@
 
 const Parser = require('./lib/Parser');
 
-class Tabstops extends Parser {
+class TabStops extends Parser {
   set(n, value) {
     this.tabstops.set(n, value);
     return this;
@@ -19,4 +19,4 @@ class Tabstops extends Parser {
   }
 }
 
-module.exports = Tabstops;
+module.exports = TabStops;

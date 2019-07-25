@@ -3,43 +3,60 @@
 require('mocha');
 const assert = require('assert');
 const Parser = require('../lib/Parser');
-const { define, format } = require('../lib/utils');
+const { normalize } = require('../lib/utils');
+const { pick, visit } = require('./support');
 
 const parse = input => {
   const snippet = new Parser(input);
   const ast = snippet.parse();
+
   ast.visit(node => {
     if (node.loc) node.range = node.loc.range;
     delete node.loc;
+    delete node.data;
     delete node.fields;
     delete node.match;
     delete node.compile;
     delete node.source;
     delete node.tabstops;
+    delete node.stops;
+    delete node.initial;
   });
+
   return ast;
+};
+
+// TODO: convert all of these tests to use tokens() instead of parse()
+const tokens = input => {
+  const snippet = new Parser(input);
+  const ast = snippet.parse();
+  const arr = [];
+
+  visit(ast, node => {
+    if (node.loc) node.range = node.loc.range;
+    arr.push(pick(node, ['type', 'name', 'value', 'range']));
+  });
+
+  return arr;
 };
 
 describe('variables', () => {
   describe('parse', () => {
     it('should parse a variable', () => {
-      assert.deepEqual(parse('foo $TM_FILEPATH bar'), {
-        type: 'root',
-        range: [0, 20],
-        nodes: [
-          { type: 'text', range: [0, 4], value: 'foo ' },
-          { type: 'variable', range: [4, 16], name: 'TM_FILEPATH', value: '$TM_FILEPATH' },
-          { type: 'text', range: [16, 20], value: ' bar' }
-        ]
-      });
+      assert.deepEqual(tokens('foo $TM_FILEPATH bar'), [
+        { type: 'root', range: [0, 20] },
+        { type: 'text', range: [0, 4], value: 'foo ' },
+        { type: 'variable', range: [4, 16], name: 'TM_FILEPATH', value: '$TM_FILEPATH' },
+        { type: 'text', range: [16, 20], value: ' bar' }
+      ]);
     });
 
     it('should add correct .loc to nodes', () => {
       let input = 'foo $TM_FILEPATH bar';
-      let ast = parse(input);
-      assert.equal(input.slice(...ast.find('text').range), 'foo ');
-      assert.equal(input.slice(...ast.find('variable').range), '$TM_FILEPATH');
-      assert.equal(input.slice(...ast.nodes.pop().range), ' bar');
+      let ast = Parser.parse(input);
+      assert.equal(input.slice(...ast.find('text').loc.range), 'foo ');
+      assert.equal(input.slice(...ast.find('variable').loc.range), '$TM_FILEPATH');
+      assert.equal(input.slice(...ast.nodes.pop().loc.range), ' bar');
     });
 
     it('should parse a textmate variable', () => {
@@ -197,7 +214,7 @@ describe('variables', () => {
     ];
 
     for (let fixture of fixtures) {
-      it(`should return inner value for: "${format(fixture[0])}"`, () => {
+      it(`should return inner value for: "${normalize(fixture[0])}"`, () => {
         assert.equal(inner(fixture[0]), fixture[1]);
       });
     }
@@ -228,11 +245,11 @@ describe('variables', () => {
       [
         'foo \\$FOO123BAR bar',
         undefined
-      ],
+      ]
     ];
 
     for (let fixture of fixtures) {
-      it(`should not match escaped characters: "${format(fixture[0])}"`, () => {
+      it(`should not match escaped characters: "${normalize(fixture[0])}"`, () => {
         assert.equal(inner(fixture[0]), fixture[1]);
       });
     }

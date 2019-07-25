@@ -2,12 +2,7 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const { parse, compile } = require('../lib/Parser');
-
-const render = (input, data) => {
-  const fn = compile(input);
-  return fn(data);
-};
+const { render } = require('../lib/Parser');
 
 describe('api - variables', () => {
   it('should expose variables from the context', () => {

@@ -17,23 +17,13 @@ const transforms = type => {
 };
 
 const params = node => {
- return omit(node.params, ['replacers']);
+  return omit(node.params, ['replacers']);
 };
 
 const omit = (node, keys = []) => {
   let obj = {};
   for (let key of Object.keys(node)) {
     if (!keys.includes(key)) {
-      obj[key] = node[key];
-    }
-  }
-  return obj;
-};
-
-const pick = (node, keys = []) => {
-  let obj = {};
-  for (let key of keys) {
-    if (node[key] !== void 0) {
       obj[key] = node[key];
     }
   }
@@ -92,7 +82,7 @@ describe('transforms', () => {
         format: '${1}',
         source: '(.)',
         string: '${1/(.)/${1}/g}',
-        flags: 'g',
+        flags: 'g'
       });
 
       assert.deepEqual(params(transform('Foo ${1/(.)/${1:upcase}/g} Bar')), {
@@ -119,7 +109,6 @@ describe('transforms', () => {
     it('should transform input using transform formats', () => {
       const input = '${TM_FILENAME/^(.)|-(.)|(\\.js)/${1:/upcase}${2:/upcase}/g}';
       const node = transform(input);
-      const params = node.parse();
       assert.equal(node.transform('this-is-a-filename'), 'ThisIsAFilename');
       assert.equal(node.transform('this-is-a-file.js'), 'ThisIsAFile');
     });
@@ -140,15 +129,12 @@ describe('transforms', () => {
     it('should transform input using transform formats - #4', () => {
       const input = '${ThisIsAVar/([A-Z]).*(Var)/$2-${1:/downcase}/}';
       const node = transform(input);
-      const params = node.parse();
-
       assert.equal(node.transform('ThisIsAVar'), 'Var-t');
     });
 
     it('should transform input using transform formats - #5', () => {
       const input = 'export default class ${TM_FILENAME/(\\w+)\\.js/$1/g}';
       const node = transform(input);
-      const params = node.parse();
       assert.equal(node.transform('FooFile.js'), 'FooFile');
     });
 

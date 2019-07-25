@@ -47,8 +47,8 @@ console.log(tabstops.render()); //=> 'console.log("");'
 tabstops.set(1, 'It worked!');
 console.log(tabstops.render()); //=> 'console.log("It worked!");'
 
-tabstops.set(2, 'Warning!');
-console.log(tabstops.render()); //=> 'console.log("It worked!");'
+tabstops.set(1, 'Warning!');
+console.log(tabstops.render()); //=> 'console.log("Warning!");'
 ```
 
 ## Docs

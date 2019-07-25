@@ -2,7 +2,7 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const { parse, compile, render } = require('../lib/Parser');
+const { parse, compile } = require('../lib/Parser');
 let tabstops;
 
 describe('compile', () => {
@@ -92,7 +92,7 @@ describe('compile', () => {
       assert.equal(compile('${name:${one:${two:${three:default}abc${alpha}}}}')(), 'defaultabcalpha');
       assert.equal(compile('${name:${one:${two:${three:default}abc${alpha}}}}')({ alpha: 'BETA'}), 'defaultabcBETA');
       assert.equal(compile('${name:${one:${two:${three:default}abc${alpha}}}}')({ two: 'ZAP'}), 'ZAP');
-    })
+    });
   });
 
   describe('tabstops', () => {
