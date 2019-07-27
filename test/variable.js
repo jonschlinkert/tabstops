@@ -2,13 +2,13 @@
 
 require('mocha');
 const assert = require('assert');
-const Parser = require('../lib/Parser');
+const { Session, Parser } = require('..');
 const { normalize } = require('../lib/utils');
 const { pick, visit } = require('./support');
 
 const parse = input => {
-  const snippet = new Parser(input);
-  const ast = snippet.parse();
+  const session = new Session(input);
+  const ast = session.parse();
 
   ast.visit(node => {
     if (node.loc) node.range = node.loc.range;
@@ -29,8 +29,8 @@ const parse = input => {
 
 // TODO: convert all of these tests to use tokens() instead of parse()
 const tokens = input => {
-  const snippet = new Parser(input);
-  const ast = snippet.parse();
+  const session = new Session(input);
+  const ast = session.parse();
   const arr = [];
 
   visit(ast, node => {

@@ -2,28 +2,28 @@
 
 require('mocha');
 const assert = require('assert').strict;
-const Parser = require('../lib/Parser');
+const Session = require('..');
 
 const render = (input, data, stop) => {
-  let parser = new Parser(input);
-  let ast = parser.parse();
+  let session = new Session(input);
+  let ast = session.parse();
   let fn = ast.compile();
 
   if (Array.isArray(stop)) {
-    parser.stops.set(...stop);
+    session.snippet.stops.set(...stop);
   }
 
   return fn(data);
 };
 
 const create = (input, options) => {
-  let parser = new Parser(input, options);
-  let ast = parser.parse();
+  let session = new Session(input, options);
+  let ast = session.parse();
   let fn = ast.compile();
 
   return {
     set(...args) {
-      parser.stops.set(...args);
+      session.snippet.stops.set(...args);
     },
     render(data) {
       return fn(data);
