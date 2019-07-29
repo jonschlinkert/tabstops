@@ -112,41 +112,24 @@ class Session extends Events {
     this.next();
   }
 
+  pushFields(map) {
+    for (let [, nodes] of map) {
+      for (let i = 0; i < nodes.length; i++) {
+        let node = nodes[i];
+        if (node.parent && node.parent.type === 'root') {
+          this.firsts.push(node);
+          break;
+        }
+      }
+      this.items.push(...nodes);
+    }
+  }
+
   addItems() {
     let { tabstop, variable, zero } = this.snippet.fields;
 
-    for (let [, nodes] of sortMap(tabstop)) {
-      for (let i = 0; i < nodes.length; i++) {
-        let node = nodes[i];
-        if (node.parent && node.parent.type === 'root') {
-          this.firsts.push(node);
-          break;
-        }
-      }
-      this.items.push(...nodes);
-    }
-
-    for (let [, nodes] of variable) {
-      // let first = false;
-
-      for (let i = 0; i < nodes.length; i++) {
-        let node = nodes[i];
-
-        // if (node.isTransform) {
-        //   this.firsts.push(node);
-        //   continue;
-        // }
-
-        // if (!first && node.parent && node.parent.type === 'root') {
-        if (node.parent && node.parent.type === 'root') {
-          // first = true;
-          this.firsts.push(node);
-          break;
-        }
-      }
-
-      this.items.push(...nodes);
-    }
+    this.pushFields(sortMap(tabstop));
+    this.pushFields(variable);
 
     if (zero) {
       this.firsts.push(zero);
@@ -186,7 +169,7 @@ class Session extends Events {
     }
 
     if (this.display === 2 && item.kind === 'variable') {
-      return style(item.stringify())
+      return style(item.stringify());
     }
 
     if (this.display === 3) {
@@ -218,120 +201,3 @@ class Session extends Events {
 }
 
 module.exports = Session;
-
-const string = [
-  '{',
-  '  "name": "\${name:}",',
-  '  "file": "\${TM_FILENAME/(\\/[^/]*?)$/${1:/upcase}/i}",',
-  '  "file": "\${TM_FILENAME/.*\\/([^/]*?)$/${1:/upcase}/ig}",',
-  '  "file": "${TM_FILENAME/(.*)/$1/g}",',
-  '  "description": "\${2:\${description:\'My amazing new project.\'}}",',
-  '  "version": "\${3:\${version:0.1.0}}",',
-  '  "repository": "\${4:\${owner}}/\${name}",',
-  '  "name": "\${1:\${fooo}}",',
-  '  "homepage": "https://github.com/\${owner}/\${name}",',
-  '  "author": "\${fullname} (https://github.com/\${username})",',
-  '  "bugs": {',
-  '    "url": "https://github.com/\${owner}/\${name}/issues"',
-  '  },',
-  '  "main": "index.js",',
-  '  "engines": {',
-  '    "node": ">=\${engine:10}"',
-  '  },',
-  '  "license": "\${license:MIT}",',
-  '  "scripts": {',
-  '    "test": "mocha"',
-  '  },',
-  '  "keywords": \${keywords}',
-  '}',
-].join('\n');
-
-const readline = require('readline');
-const update = require('log-update');
-const header = (message = '') => colors.bold.underline(message) + '\n';
-
-const prompt = (input, options) => {
-  const { stdin, stdout } = process;
-  const rl = readline.createInterface({ input: stdin, output: stdout });
-  const session = new Session(input, { ...options, decorate: true });
-
-  readline.emitKeypressEvents(rl.input);
-  if (stdin.isTTY) stdin.setRawMode(true);
-
-  const state = { index: 0 };
-  const close = () => {
-    session.closed = true;
-    update(session.render());
-    rl.close();
-    process.exit();
-  };
-
-  rl.on('SIGINT', close);
-  rl.on('line', close);
-  rl.input.on('keypress', (input, event) => {
-    if (event.name === 'y' && event.ctrl === true) {
-      session.togglePlaceholders();
-    } else if (event.name === 'tab') {
-      session[event.shift === true ? 'prev' : 'next']();
-
-    } else if (event.name === 'left') {
-      session.left();
-    } else if (event.name === 'right') {
-      session.right();
-
-    } else if (event.name === 'up') {
-      session.up();
-    } else if (event.name === 'down') {
-      session.down();
-
-    } else {
-      let item = session.focused;
-      let prev = session.values.get(item.key);
-      let fields = session.fields[item.kind];
-      let items = fields.get(item.key);
-
-      if (event.name === 'backspace' || event.name === 'delete') {
-        item.input = item.input.slice(0, -1);
-      } else {
-        item.input += input;
-      }
-
-      if (item.isTransform) {
-        session.values.set(item.key, colors.unstyle(item.input || item.raw));
-      } else {
-        session.values.set(item.key, colors.unstyle(item.input));
-      }
-    }
-
-    update(session.render());
-  });
-
-  update(session.render());
-};
-
-const options = {
-  fields: {
-    keywords(value) {
-      return `["${value.split(/,\s*/).join('", "')}"]`;
-    },
-    // name: {
-    //   validate() {
-
-    //   },
-    //   format() {
-
-    //   },
-    //   result() {
-
-    //   }
-    // }
-  },
-  data: {
-    _name: 'Brian',
-    TM_FILENAME: __filename,
-    ENV_FILENAME: 'index.js',
-  }
-}
-
-
-prompt(string, options);
