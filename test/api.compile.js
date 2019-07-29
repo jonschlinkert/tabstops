@@ -3,7 +3,7 @@
 require('mocha');
 const assert = require('assert').strict;
 const { parse, compile } = require('../lib/Parser');
-let stops;
+let tabstop;
 
 describe('compile', () => {
   describe('from vscode', () => {
@@ -143,34 +143,34 @@ describe('compile', () => {
 
   describe('tabstops', () => {
     beforeEach(() => {
-      stops = new Map();
+      tabstop = new Map();
     });
 
     it('should render a tabstop using a value from the context', () => {
-      stops.set(1, 'OneTwo');
-      assert.equal(compile('${1}', { stops })(), 'OneTwo');
+      tabstop.set(1, 'OneTwo');
+      assert.equal(compile('${1}', { tabstop })(), 'OneTwo');
     });
 
     it('should return an empty string when no values are defined', () => {
-      assert.equal(compile('${1}', { stops })(), '');
+      assert.equal(compile('${1}', { tabstop })(), '');
     });
   });
 
   describe('tabstops with placeholders', () => {
     beforeEach(() => {
-      stops = new Map();
+      tabstop = new Map();
     });
 
     it('should render a tabstop using a value from the context', () => {
-      assert.equal(compile('${1:${name}}', { stops })({ name: 'FooBar' }), 'FooBar');
+      assert.equal(compile('${1:${name}}', { tabstop })({ name: 'FooBar' }), 'FooBar');
     });
 
     it('should render a tabstop using its placeholder value', () => {
-      assert.equal(compile('${1:AbcXyz}', { stops })(), 'AbcXyz');
+      assert.equal(compile('${1:AbcXyz}', { tabstop })(), 'AbcXyz');
     });
 
     it('should return the tabstop name when no values are defined', () => {
-      assert.equal(compile('${1}', { stops })(), '');
+      assert.equal(compile('${1}', { tabstop })(), '');
     });
   });
 });

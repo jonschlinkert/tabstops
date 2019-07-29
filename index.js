@@ -1,152 +1,211 @@
 'use strict';
 
-const kAst = Symbol('ast');
-const Parser = require('./lib/Parser');
+const Events = require('events');
 const colors = require('ansi-colors');
+const Parser = require('./lib/Parser');
 
-const styles = colors.theme({
-  info: colors.cyan,
-  success: colors.green,
-  primary: colors.blue,
-  warning: colors.yellow,
-  danger: colors.red
-});
+const sortMap = map => {
+  const newMap = new Map();
+  const keys = [...map.keys()];
+  keys.sort((a, b) => (String(a).localeCompare(String(b))));
+  for (let key of keys) {
+    newMap.set(key, map.get(key));
+  }
+  return newMap;
+};
 
-class Session {
+class Session extends Events {
   constructor(string, options) {
-    this.format = this.format.bind(this);
-    this.options = { ...options, format: this.format };
+    super();
+    this.options = { ...options };
     this.snippet = new Parser(string, options);
-    this.string = string;
-    this.lines = this.string.split(/\r*\n/);
-    this.startLine = this.options.startLine || 0;
-    this.endLine = (this.options.maxLines || this.lines.length) + this.startLine;
-    this.stops = [];
+    this.firsts = [];
     this.items = [];
-    this.state = {
-      // cursor: 0,
-      // index: 0,
-      // line: 0,
-      // tabstop: 0,
-      range: [this.startLine, this.endLine],
-      i: 0,
-    };
+    this.index = 0;
+    this.display = 0;
 
-    this.styles = styles;
-    if (this.options.theme) {
-      this.styles = colors.create();
-      this.styles.theme(this.options.theme);
+    this.fields = this.snippet.fields;
+    this.variables = this.snippet.values.variable;
+    this.tabstops = this.snippet.values.tabstop;
+
+    if (this.options.decorate) {
+      this.snippet.on('field', item => {
+        item.cursor = 0;
+        item.input = '';
+        item.output = '';
+        item.format = this.format(item);
+        this.emit('field', item);
+      });
     }
   }
 
-  get focused() {
-    return this.items[this.state.i];
+  format(item) {
+    return (state, history) => {
+      let output = state.value;
+
+      if (!item.isValue(output)) {
+        output = item.input;
+      }
+
+      if (this.display > 0 && this.display < 4) {
+        return this.showPlaceholders(item, output);
+      }
+
+      let fields = this.options.fields || {};
+      let field = fields[item.key];
+
+      if (typeof field === 'function') {
+        output = field(output);
+      }
+
+      if (this.closed) {
+        let { value, resolved } = state;
+        let { name, emptyPlaceholder } = item;
+
+        if (resolved === 'name' && emptyPlaceholder && name === value) {
+          return '';
+        }
+
+        return output;
+      }
+
+      let style = item.kind === 'tabstop'
+        ? colors.unstyle.green
+        : colors.unstyle.cyan;
+
+      if (this.focused === item) {
+        style = style.bold.underline;
+      }
+
+      return style(output);
+    };
   }
 
-  /**
-   * Move the cursor left or right in the input string
-   */
-
-  left() {
-    this.state.cursor--;
-  }
-  right() {
-    this.state.cursor++;
+  first() {
+    this.index = 0;
+    return this.render();
   }
 
-  /**
-   * Jump to the next or previous tabstop
-   */
+  last() {
+    this.index = this.firsts.length - 1;
+  }
 
   prev() {
-    let len = this.items.length;
-    this.state.i = (this.state.i - (1 % len) + len) % len;
-    return this.render();
+    this.index = (this.index - (1 % this.length) + this.length) % this.length;
   }
 
   next() {
-    this.state.i = (this.state.i + 1) % this.items.length;
-    return this.render();
+    this.index = (this.index + 1) % this.length;
   }
 
-  /**
-   * Scroll content up or down
-   */
+  left() {
+    this.cursor--;
+  }
+  right() {
+    this.cursor++;
+  }
 
-  // up() {
-  //   this.state.index--;
-  // }
-  // down() {
-  //   this.state.index++;
-  // }
+  up() {
+    this.prev();
+  }
+  down() {
+    this.next();
+  }
 
-  /**
-   * Increase or decrease the number of visible lines rendered.
-   */
-
-  // pageUp() {
-  //   this.state.limit--;
-  // }
-  // pageDown() {
-  //   this.state.limit++;
-  // }
-
-  updateFields() {
+  addItems() {
     let { tabstop, variable, zero } = this.snippet.fields;
-    for (let [key, nodes] of tabstop) {
-      this.stops.push(nodes);
+
+    for (let [, nodes] of sortMap(tabstop)) {
+      for (let i = 0; i < nodes.length; i++) {
+        let node = nodes[i];
+        if (node.parent && node.parent.type === 'root') {
+          this.firsts.push(node);
+          break;
+        }
+      }
       this.items.push(...nodes);
     }
 
-    for (let [key, nodes] of variable) {
-      this.stops.push(nodes);
+    for (let [, nodes] of variable) {
+      // let first = false;
+
+      for (let i = 0; i < nodes.length; i++) {
+        let node = nodes[i];
+
+        // if (node.isTransform) {
+        //   this.firsts.push(node);
+        //   continue;
+        // }
+
+        // if (!first && node.parent && node.parent.type === 'root') {
+        if (node.parent && node.parent.type === 'root') {
+          // first = true;
+          this.firsts.push(node);
+          break;
+        }
+      }
+
       this.items.push(...nodes);
     }
 
     if (zero) {
-      this.stops.push([zero]);
+      this.firsts.push(zero);
       this.items.push(zero);
     }
   }
 
   parse(...args) {
-    if (this.ast) return this.ast;
-    this.ast = this.snippet.parse(...args);
-    this.updateFields();
+    delete this.fn;
+    this.ast = this.snippet.parse();
+    this.addItems();
     return this.ast;
   }
 
-  format(state, history = []) {
-    if (state.value === void 0) return this.styles.danger('<foo>');
-    if (state.node.kind === 'text') {
-      return state.value;
-    }
-
-    let focused = this.focused;
-    let index = this.items.indexOf(state.node);
-    console.log([index])
-
-    // if (state.node.kind === 'tabstop') {
-    //   return this.styles.warning(state.value);
-    // }
-
-    // if (state.node.kind === 'variable') {
-    //   return this.styles.info(state.value);
-    // }
-
-    return state.value;
-  }
-
-  render(data = {}) {
+  compile() {
     if (!this.fn) {
       let ast = this.parse();
       this.fn = ast.compile(this.options);
     }
+    return this.fn;
+  }
+
+  render(data) {
+    this.fn = this.compile();
     return this.fn(data);
   }
 
-  visible(output) {
-    return output.split(/\r*\n/).slice(...this.state.range).join('\n');
+  togglePlaceholders() {
+    this.display = this.display < 3 ? this.display + 1 : 0;
+  }
+
+  showPlaceholders(item, value) {
+    let style = colors[item.kind === 'tabstop' ? 'blue' : 'green'];
+
+    if (this.display === 1 && item.kind === 'tabstop') {
+      return style(item.stringify());
+    }
+
+    if (this.display === 2 && item.kind === 'variable') {
+      return style(item.stringify())
+    }
+
+    if (this.display === 3) {
+      return style(item.stringify());
+    }
+
+    return value;
+  }
+
+  get values() {
+    return this.focused.kind === 'tabstop' ? this.tabstops : this.variables;
+  }
+
+  get focused() {
+    return this.firsts[this.index];
+  }
+
+  get length() {
+    return this.firsts.length;
   }
 
   static get Session() {
@@ -160,60 +219,119 @@ class Session {
 
 module.exports = Session;
 
-// // pass a string as the first argument
-// const snippet = new Parser('console.log("$1");');
+const string = [
+  '{',
+  '  "name": "\${name:}",',
+  '  "file": "\${TM_FILENAME/(\\/[^/]*?)$/${1:/upcase}/i}",',
+  '  "file": "\${TM_FILENAME/.*\\/([^/]*?)$/${1:/upcase}/ig}",',
+  '  "file": "${TM_FILENAME/(.*)/$1/g}",',
+  '  "description": "\${2:\${description:\'My amazing new project.\'}}",',
+  '  "version": "\${3:\${version:0.1.0}}",',
+  '  "repository": "\${4:\${owner}}/\${name}",',
+  '  "name": "\${1:\${fooo}}",',
+  '  "homepage": "https://github.com/\${owner}/\${name}",',
+  '  "author": "\${fullname} (https://github.com/\${username})",',
+  '  "bugs": {',
+  '    "url": "https://github.com/\${owner}/\${name}/issues"',
+  '  },',
+  '  "main": "index.js",',
+  '  "engines": {',
+  '    "node": ">=\${engine:10}"',
+  '  },',
+  '  "license": "\${license:MIT}",',
+  '  "scripts": {',
+  '    "test": "mocha"',
+  '  },',
+  '  "keywords": \${keywords}',
+  '}',
+].join('\n');
 
-// console.log(snippet.render()); //=> 'console.log("");'
+const readline = require('readline');
+const update = require('log-update');
+const header = (message = '') => colors.bold.underline(message) + '\n';
 
-// snippet.set(1, 'It worked!');
-// console.log(snippet.render()); //=> 'console.log("It worked!");'
+const prompt = (input, options) => {
+  const { stdin, stdout } = process;
+  const rl = readline.createInterface({ input: stdin, output: stdout });
+  const session = new Session(input, { ...options, decorate: true });
 
-// snippet.set(1, 'Warning!');
-// console.log(snippet.render()); //=> 'console.log("Warning!");'
+  readline.emitKeypressEvents(rl.input);
+  if (stdin.isTTY) stdin.setRawMode(true);
 
-// const snippet2 = new Parser('Your username is: ${username:jonschlinkert}');
-// snippet2.data.set('username', 'doowb');
-// console.log(snippet2.render())
+  const state = { index: 0 };
+  const close = () => {
+    session.closed = true;
+    update(session.render());
+    rl.close();
+    process.exit();
+  };
 
+  rl.on('SIGINT', close);
+  rl.on('line', close);
+  rl.input.on('keypress', (input, event) => {
+    if (event.name === 'y' && event.ctrl === true) {
+      session.togglePlaceholders();
+    } else if (event.name === 'tab') {
+      session[event.shift === true ? 'prev' : 'next']();
 
-const snippet = `import React, { Component } from 'react';
+    } else if (event.name === 'left') {
+      session.left();
+    } else if (event.name === 'right') {
+      session.right();
 
-export class \${1:\${TM_FILENAME/(.+)\\..+|.*/$1/:ComponentName}} extends Component {
-  render() {
-    return \${2:(
-      \${3:<div>\${0}</div>}
-    );}
+    } else if (event.name === 'up') {
+      session.up();
+    } else if (event.name === 'down') {
+      session.down();
+
+    } else {
+      let item = session.focused;
+      let prev = session.values.get(item.key);
+      let fields = session.fields[item.kind];
+      let items = fields.get(item.key);
+
+      if (event.name === 'backspace' || event.name === 'delete') {
+        item.input = item.input.slice(0, -1);
+      } else {
+        item.input += input;
+      }
+
+      if (item.isTransform) {
+        session.values.set(item.key, colors.unstyle(item.input || item.raw));
+      } else {
+        session.values.set(item.key, colors.unstyle(item.input));
+      }
+    }
+
+    update(session.render());
+  });
+
+  update(session.render());
+};
+
+const options = {
+  fields: {
+    keywords(value) {
+      return `["${value.split(/,\s*/).join('", "')}"]`;
+    },
+    // name: {
+    //   validate() {
+
+    //   },
+    //   format() {
+
+    //   },
+    //   result() {
+
+    //   }
+    // }
+  },
+  data: {
+    _name: 'Brian',
+    TM_FILENAME: __filename,
+    ENV_FILENAME: 'index.js',
   }
 }
 
-Foo: \${one}
 
-Bar: \${two}
-
-Baz: \${three}
-`;
-
-// const format = state => {
-//   if (state.type !== 'text') {
-//     // console.log(state.node);
-//   }
-//   return state.value;
-// };
-
-// const data = { name: 'Blah' };
-// // const session = new Session('$1 ${1:${name:foo}} $3 $1 $user ${2:bar}', { format, data, zero: true });
-// const session = new Session('$1 $name ${2:foo}', { format, data, zero: true });
-
-// const render = data => {
-//   console.log(session.visible(session.render(data)));
-//   console.log('---');
-// };
-
-// // session.snippet.set(1, 'ONE')
-// render({ _name: 'Whatever' });
-// // session.snippet.set(3, 'THREEEE')
-// // session.pageUp();
-// // render();
-// // session.snippet.set(2, 'TWOOO');
-// // render();
-// // render({ user: 'me' });
+prompt(string, options);

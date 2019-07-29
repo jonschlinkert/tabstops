@@ -17,6 +17,14 @@ describe('variable placeholders', () => {
       const node = ast.nodes[0];
       assert.equal(node.nodes[1].value, 'foo:bar');
     });
+
+    it('should work with empty placeholders', () => {
+      const ast = parse('${name:}');
+      const node = ast.nodes[0];
+      assert.equal(node.emptyPlaceholder, true);
+      assert.equal(node.nodes[1].type, 'text');
+      assert.equal(node.nodes[1].value, '');
+    });
   });
 
   describe('compile', () => {

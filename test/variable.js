@@ -13,14 +13,11 @@ const parse = input => {
   ast.visit(node => {
     if (node.loc) node.range = node.loc.range;
     delete node.loc;
-    delete node.data;
     delete node.fields;
     delete node.match;
     delete node.compile;
     delete node.source;
-    delete node.tabstops;
-    delete node.names;
-    delete node.stops;
+    delete node.values;
     delete node.initial;
   });
 

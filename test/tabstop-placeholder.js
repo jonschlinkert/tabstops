@@ -36,14 +36,14 @@ describe('tabstop placeholders', () => {
     });
 
     it('should render a cached tabstop value', () => {
-      snippet.stops.set(1, 'bar-baz.txt');
+      snippet.values.tabstop.set(1, 'bar-baz.txt');
       const fn = ast.compile();
       assert.equal(fn({ TM_FILENAME: 'foo.txt' }), '<bar-baz.txt>');
     });
 
     it('should use a tabstop value defined after compile fn is created', () => {
       const fn = ast.compile();
-      snippet.stops.set(1, 'bar-baz.txt');
+      snippet.values.tabstop.set(1, 'bar-baz.txt');
       assert.equal(fn({ TM_FILENAME: 'foo.txt' }), '<bar-baz.txt>');
     });
 
@@ -67,7 +67,7 @@ describe('tabstop placeholders', () => {
     });
 
     it('should render a cached tabstop value', () => {
-      snippet.stops.set(1, 'bar-baz.txt');
+      snippet.values.tabstop.set(1, 'bar-baz.txt');
       const fn = ast.compile();
       assert.equal(fn({ TM_FILENAME: 'foo.txt' }), '<bar-baz.txt>');
     });
