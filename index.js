@@ -56,7 +56,7 @@ class Session extends Events {
         output = item.input;
       }
 
-      if (this.display > 0 && this.display < 4) {
+      if (!this.closed && this.display > 0 && this.display < 4) {
         return this.showPlaceholders(item, output);
       }
 
@@ -75,6 +75,10 @@ class Session extends Events {
           return '';
         }
 
+        return output;
+      }
+
+      if (this.display === 4) {
         return output;
       }
 
@@ -205,11 +209,14 @@ class Session extends Events {
   }
 
   togglePlaceholders() {
-    this.display = this.display < 3 ? this.display + 1 : 0;
+    this.display = this.display < 4 ? this.display + 1 : 0;
   }
 
   showPlaceholders(item, value) {
     let style = colors[item.kind === 'tabstop' ? 'blue' : 'green'];
+    if (item.type === 'choices') {
+      style = colors.yellow;
+    }
 
     if (this.display === 1 && item.kind === 'tabstop') {
       return style(item.stringify());
@@ -221,6 +228,10 @@ class Session extends Events {
 
     if (this.display === 3) {
       return style(item.stringify());
+    }
+
+    if (this.display === 4) {
+      return item.stringify();
     }
 
     return value;
