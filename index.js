@@ -203,6 +203,13 @@ class Session extends Events {
     return lines.slice(0, this.visible).join('\n');
   }
 
+  renderResult(data) {
+    this.resetLines();
+    this.closed = true;
+    this.display = 0;
+    return this.render(data);
+  }
+
   resetLines() {
     this.offset = 0;
     this.visible = this.llen;

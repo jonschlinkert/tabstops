@@ -44,12 +44,9 @@ const prompt = (input, options = {}) => {
   if (stdin.isTTY) stdin.setRawMode(true);
 
   const close = () => {
-    session.closed = true;
     rl.close();
 
-    session.resetLines();
-    let result = session.render();
-
+    let result = session.renderResult();
     if (options.onClose) {
       options.onClose(result);
     }
