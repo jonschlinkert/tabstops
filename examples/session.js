@@ -35,7 +35,7 @@ const string = [
 const readline = require('readline');
 const update = require('log-update');
 
-const prompt = (input, options) => {
+const prompt = (input, options = {}) => {
   const { stdin, stdout } = process;
   const rl = readline.createInterface({ input: stdin, output: stdout });
   const session = new Session(input, { ...options, decorate: true });
@@ -45,8 +45,14 @@ const prompt = (input, options) => {
 
   const close = () => {
     session.closed = true;
-    update(session.render());
     rl.close();
+
+    session.resetLines();
+    let result = session.render();
+
+    if (options.onClose) {
+      options.onClose(result);
+    }
     process.exit();
   };
 
@@ -103,6 +109,9 @@ const options = {
 
     //   }
     // }
+  },
+  onClose(result) {
+    console.log(result);
   },
   data: {
     _name: 'Brian',

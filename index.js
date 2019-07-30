@@ -189,15 +189,19 @@ class Session extends Events {
     this.fn = this.compile();
     let output = this.fn(data);
     let lines = output.split('\n');
-    let end, start;
 
     if (this.offset !== 0) {
-      start = lines.slice(-this.offset);
-      end = lines.slice(0, -this.offset);
+      let start = lines.slice(-this.offset);
+      let end = lines.slice(0, -this.offset);
       lines = [...start, ...end];
     }
 
     return lines.slice(0, this.visible).join('\n');
+  }
+
+  resetLines() {
+    this.offset = 0;
+    this.visible = this.llen;
   }
 
   togglePlaceholders() {
