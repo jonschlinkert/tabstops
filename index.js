@@ -14,6 +14,10 @@ const sortMap = map => {
   return newMap;
 };
 
+const slice = (lines, start, end) => {
+  return start === end ? lines[start] : lines.slice(start, end);
+};
+
 class Session extends Events {
   constructor(string, options) {
     super();
@@ -27,6 +31,11 @@ class Session extends Events {
     this.fields = this.snippet.fields;
     this.variables = this.snippet.values.variable;
     this.tabstops = this.snippet.values.tabstop;
+    this.lines = string.split('\n');
+    this.range = [0, this.lines.length];
+    this.visible = this.lines.length;
+    this.offset = 0;
+    this.fns = [];
 
     if (this.options.decorate) {
       this.snippet.on('field', item => {
@@ -77,6 +86,10 @@ class Session extends Events {
         style = style.bold.underline;
       }
 
+      if (item.type === 'choices') {
+        return colors.dim('⬍') + style(output);
+      }
+
       return style(output);
     };
   }
@@ -106,10 +119,30 @@ class Session extends Events {
   }
 
   up() {
-    this.prev();
+    if (this.focused.type !== 'choices') return;
+    let l = this.focused.choices.length;
+    this.focused.cursor = (this.focused.cursor - (1 % l) + l) % l;
   }
   down() {
-    this.next();
+    if (this.focused.type !== 'choices') return;
+    let l = this.focused.choices.length;
+    this.focused.cursor = (this.focused.cursor + 1) % l;
+  }
+
+  shiftup() {
+    this.offset = (this.offset + 1) % this.llen;
+  }
+
+  shiftdown() {
+    this.offset = -(-this.offset + 1) % this.llen;
+  }
+
+  pageup() {
+    this.visible = Math.max(this.visible - 1, 3);
+  }
+
+  pagedown() {
+    this.visible = Math.min(this.visible + 1, this.lines.length);
   }
 
   pushFields(map) {
@@ -154,7 +187,17 @@ class Session extends Events {
 
   render(data) {
     this.fn = this.compile();
-    return this.fn(data);
+    let output = this.fn(data);
+    let lines = output.split('\n');
+    let end, start;
+
+    if (this.offset !== 0) {
+      start = lines.slice(-this.offset);
+      end = lines.slice(0, -this.offset);
+      lines = [...start, ...end];
+    }
+
+    return lines.slice(0, this.visible).join('\n');
   }
 
   togglePlaceholders() {
@@ -181,6 +224,10 @@ class Session extends Events {
 
   get values() {
     return this.focused.kind === 'tabstop' ? this.tabstops : this.variables;
+  }
+
+  get llen() {
+    return this.lines.length;
   }
 
   get focused() {
