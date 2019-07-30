@@ -4,10 +4,11 @@ require('mocha');
 const path = require('path');
 const assert = require('assert').strict;
 const { parse, render } = require('../lib/Parser');
+const posix = str => str.split('\\').join('/');
 const data = {
-  TM_DIRECTORY: __dirname,
+  TM_DIRECTORY: posix(__dirname),
   TM_FILENAME: 'parse.js',
-  TM_FILEPATH: path.join(__dirname, 'parse.js')
+  TM_FILEPATH: path.posix.join(posix(__dirname), 'parse.js')
 };
 
 const transforms = type => {
@@ -72,7 +73,7 @@ describe('variable transforms', () => {
       { input: '${foo/([A-Z][a-z])/format/}', expected: 'foo' },
       { input: '${foo///}', expected: 'foo' },
       { input: '${foo/regex/format/gmi}', expected: 'foo' },
-      { input: '${TM_DIRECTORY/.*[\\/](.*)$/$1/}', expected: 'test' },
+      { input: '${TM_DIRECTORY/.*[\\\/](.*)$/$1/}', expected: 'test' },
       { input: '${TM_FILENAME/(.*)/$1/i}', expected: 'parse.js' },
       { input: '${TM_FILENAME/(.*)/$1/i}', expected: 'parse.js' },
       { input: '${TM_FILENAME/(.*)/${1}/i}', expected: 'parse.js' },
