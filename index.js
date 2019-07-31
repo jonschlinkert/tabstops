@@ -26,7 +26,7 @@ class Session extends Events {
     this.firsts = [];
     this.items = [];
     this.index = 0;
-    this.display = 0;
+    this.mode = 0;
 
     this.fields = this.snippet.fields;
     this.variables = this.snippet.values.variable;
@@ -56,7 +56,7 @@ class Session extends Events {
         output = item.input;
       }
 
-      if (!this.closed && this.display > 0 && this.display < 4) {
+      if (!this.closed && this.mode > 0 && this.mode < 4) {
         return this.showPlaceholders(item, output);
       }
 
@@ -78,7 +78,7 @@ class Session extends Events {
         return output;
       }
 
-      if (this.display === 4) {
+      if (this.mode === 4) {
         return output;
       }
 
@@ -206,7 +206,7 @@ class Session extends Events {
   renderResult(data) {
     this.resetLines();
     this.closed = true;
-    this.display = 0;
+    this.mode = 0;
     return this.render(data);
   }
 
@@ -216,7 +216,7 @@ class Session extends Events {
   }
 
   togglePlaceholders() {
-    this.display = this.display < 4 ? this.display + 1 : 0;
+    this.mode = this.mode < 4 ? this.mode + 1 : 0;
   }
 
   showPlaceholders(item, value) {
@@ -225,19 +225,19 @@ class Session extends Events {
       style = colors.yellow;
     }
 
-    if (this.display === 1 && item.kind === 'tabstop') {
+    if (this.mode === 1 && item.kind === 'tabstop') {
       return style(item.stringify());
     }
 
-    if (this.display === 2 && item.kind === 'variable') {
+    if (this.mode === 2 && item.kind === 'variable') {
       return style(item.stringify());
     }
 
-    if (this.display === 3) {
+    if (this.mode === 3) {
       return style(item.stringify());
     }
 
-    if (this.display === 4) {
+    if (this.mode === 4) {
       return item.stringify();
     }
 
