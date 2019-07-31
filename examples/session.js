@@ -45,8 +45,9 @@ const prompt = (input, options = {}) => {
 
   const close = () => {
     rl.close();
-
     let result = session.renderResult();
+    update.clear();
+
     if (options.onClose) {
       options.onClose(result);
     }
@@ -108,7 +109,7 @@ const options = {
     // }
   },
   onClose(result) {
-    console.log(result);
+    console.log([result]);
   },
   data: {
     _name: 'Brian',
