@@ -38,6 +38,8 @@ const prompt = (input, options = {}) => {
       session.pageup();
     } else if (event.code === '[6~') {
       session.pagedown();
+    } else if (event.name === 'space' && session.focused.type === 'checkbox') {
+      session.focused.toggle();
     } else if (event.name === 'tab') {
       session[event.shift === true ? 'prev' : 'next']();
     } else if (event.name === 'left') {

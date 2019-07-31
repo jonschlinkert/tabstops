@@ -71,6 +71,14 @@ class Session extends Events {
     return (state, history) => {
       let output = state.value;
 
+      if (item.type === 'checkbox') {
+        let { indicator, message } = state;
+        if (item === this.focused) {
+          message = colors.underline(message);
+        }
+        return `${indicator} ${message}`;
+      }
+
       if (!item.isValue(output)) {
         output = item.input;
       }
