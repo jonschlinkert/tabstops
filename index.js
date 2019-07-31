@@ -21,21 +21,39 @@ const slice = (lines, start, end) => {
 class Session extends Events {
   constructor(string, options) {
     super();
-    this.options = { ...options };
+    this.options = options || {};
     this.snippet = new Parser(string, options);
+
+    // The first array "$1" is used for storing the first
+    // instance of a given tabstop, since repeated tabstops
+    // are mirrors of the first.
     this.firsts = [];
     this.items = [];
-    this.index = 0;
-    this.mode = 0;
 
+    this.invisible = new Set([].concat(this.options.invisible || []));
+    this.readonly = new Set([].concat(this.options.readonly || []));
     this.fields = this.snippet.fields;
     this.variables = this.snippet.values.variable;
     this.tabstops = this.snippet.values.tabstop;
+    this.display = this.options.display;
+
     this.lines = string.split('\n');
     this.range = [0, this.lines.length];
-    this.visible = this.lines.length;
+    let vis = this.options.visible || this.lines.length;
+    this.visible = Math.min(vis, this.lines.length);
+    this.linemap = [];
+
+    this.itemIndex = 0;
     this.offset = 0;
-    this.fns = [];
+    this.cursor = 0;
+    this.index = 0;
+    this.mode = 0;
+
+    if (this.options.actions) {
+      for (let key of Object.keys(this.options.actions)) {
+        this[key] = this.options.actions[key].bind(this);
+      }
+    }
 
     if (this.options.decorate) {
       this.snippet.on('field', item => {
@@ -64,7 +82,11 @@ class Session extends Events {
       let field = fields[item.key];
 
       if (typeof field === 'function') {
-        output = field(output);
+        output = field.call(item, output, this);
+      }
+
+      if (this.invisible.has(item.key) && item.occurrence === 1) {
+        return '';
       }
 
       if (this.closed) {
@@ -123,14 +145,15 @@ class Session extends Events {
   }
 
   up() {
-    if (this.focused.type !== 'choices') return;
-    let l = this.focused.choices.length;
-    this.focused.cursor = (this.focused.cursor - (1 % l) + l) % l;
+    let item = this.focused;
+    item.cursor = (item.cursor - (1 % item.size) + item.size) % item.size;
+    this.itemIndex = item.cursor;
   }
+
   down() {
-    if (this.focused.type !== 'choices') return;
-    let l = this.focused.choices.length;
-    this.focused.cursor = (this.focused.cursor + 1) % l;
+    let item = this.focused;
+    item.cursor = (item.cursor + 1) % item.size;
+    this.itemIndex = item.cursor;
   }
 
   shiftup() {
@@ -149,19 +172,6 @@ class Session extends Events {
     this.visible = Math.min(this.visible + 1, this.lines.length);
   }
 
-  pushFields(map) {
-    for (let [, nodes] of map) {
-      for (let i = 0; i < nodes.length; i++) {
-        let node = nodes[i];
-        if (node.parent && node.parent.type === 'root') {
-          this.firsts.push(node);
-          break;
-        }
-      }
-      this.items.push(...nodes);
-    }
-  }
-
   addItems() {
     let { tabstop, variable, zero } = this.snippet.fields;
 
@@ -172,6 +182,43 @@ class Session extends Events {
       this.firsts.push(zero);
       this.items.push(zero);
     }
+
+    this.linemap = new Map();
+    this.linenos = [];
+
+    this.lines.forEach((e, i) => {
+      let lines = [];
+      this.linemap.set(i, lines);
+      this.linenos.push(lines);
+
+      for (let field of this.firsts) {
+        if (field.loc.lines.includes(i)) {
+          lines.push(field);
+        }
+      }
+    });
+  }
+
+  pushFields(map) {
+    let occurrences = new Map();
+
+    for (let [, nodes] of map) {
+      for (let i = 0; i < nodes.length; i++) {
+        let node = nodes[i];
+        let count = node.occurrence = (occurrences.has(node.key) || 0) + 1;
+        occurrences.set(node.key, count);
+
+        if (this.readonly.has(node.key)) {
+          continue;
+        }
+
+        if (node.parent && node.parent.type === 'root') {
+          this.firsts.push(node);
+          break;
+        }
+      }
+      this.items.push(...nodes);
+    }
   }
 
   parse(...args) {
@@ -181,38 +228,59 @@ class Session extends Events {
     return this.ast;
   }
 
-  compile() {
+  compile(options) {
     if (!this.fn) {
       let ast = this.parse();
-      this.fn = ast.compile(this.options);
+      this.fn = ast.compile({ ...this.options, ...options });
     }
     return this.fn;
   }
 
-  render(data) {
-    this.fn = this.compile();
+  render(data, options) {
+    this.fn = this.compile(options);
     let output = this.fn(data);
     let lines = output.split('\n');
 
     if (this.offset !== 0) {
-      let start = lines.slice(-this.offset);
-      let end = lines.slice(0, -this.offset);
-      lines = [...start, ...end];
+      lines = this.recalculate(lines);
     }
 
-    return lines.slice(0, this.visible).join('\n');
+    // if (!this.cursorIsVisible()) {
+    //   this.shiftdown();
+    //   return this.render(data);
+    // }
+
+    let visible = lines.slice(0, this.visible);
+    return visible.join('\n');
   }
 
   renderResult(data) {
-    this.resetLines();
     this.closed = true;
+    this.visible = this.lines.length;
+    this.offset = 0;
     this.mode = 0;
+    // return this.render(data) + '\n[' + this.line + ']';
     return this.render(data);
+  }
+
+  recalculate(lines) {
+    let { linenos, offset } = this;
+    // this.linenos = [...linenos.slice(-offset), ...linenos.slice(0, -offset)];
+    return [...lines.slice(-offset), ...lines.slice(0, -offset)];
+  }
+
+  cursorIsVisible() {
+    for (let line of this.linenos.slice(0, this.visible)) {
+      if (line.includes(this.focused)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   resetLines() {
     this.offset = 0;
-    this.visible = this.llen;
+    this.visible = Math.min(Math.max(this.options.visible, 0), this.lines.length);
   }
 
   togglePlaceholders() {
@@ -246,6 +314,14 @@ class Session extends Events {
 
   get values() {
     return this.focused.kind === 'tabstop' ? this.tabstops : this.variables;
+  }
+
+  get line() {
+    let range = this.focused.loc.lines;
+    if (range[0] === range[1]) {
+      return this.lines[range[0]];
+    }
+    return this.lines.slice(...range);
   }
 
   get llen() {

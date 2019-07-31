@@ -24,10 +24,12 @@
     "tabstops"
   ],
   "dependencies": {
-    "ansi-colors": "^4.1.1"
+    "ansi-colors": "^4.1.1",
+    "enquirer": "file:../../@enquirer/enquirer-3.0.0"
   },
   "devDependencies": {
     "gulp-format-md": "^2.0.0",
+    "log-update": "^3.2.0",
     "mocha": "^6.1.4"
   },
   "verb": {

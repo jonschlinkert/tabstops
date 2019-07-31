@@ -64,6 +64,85 @@ describe('choices', () => {
     });
   });
 
+  describe('choices variables', () => {
+    it('should support variables as choices', () => {
+      const data = {};
+      const ast = parse('Choice: ${1|${foo:${home}},$array,$user|}', { data });
+      const node = ast.find('choices');
+      const fn = ast.compile();
+
+      assert.equal(fn(), 'Choice: home');
+      node.choose(1);
+      assert.equal(fn(), 'Choice: array');
+      node.choose(2);
+      assert.equal(fn(), 'Choice: user');
+
+      node.choose(0);
+      data.home = '~/foo';
+      assert.equal(fn(), 'Choice: ~/foo');
+
+      node.choose(1);
+      data.array = ['alpha', 'beta', 'gamma'];
+      data.user = 'someuser';
+      assert.equal(fn(), 'Choice: alpha');
+
+      node.choose(3);
+      assert.equal(fn(), 'Choice: gamma');
+
+      node.choose(4);
+      assert.equal(fn(), 'Choice: someuser');
+    });
+
+    it('should support functions as variables', () => {
+      const ast = parse('Choice: ${1|${foo:${nested}},$array,$user|}');
+      const node = ast.find('choices');
+      const fn = ast.compile();
+
+      assert.equal(fn({ foo: () => 'abc' }), 'Choice: abc');
+      assert.equal(fn({ foo: () => 'def' }), 'Choice: def');
+      assert.equal(fn({ foo: () => 'ghi' }), 'Choice: ghi');
+    });
+
+    it('should support functions on nested variables', () => {
+      const ast = parse('Choice: ${1|${foo:${nested}},$array,$user|}');
+      const node = ast.find('choices');
+      const fn = ast.compile();
+
+      assert.equal(fn({ foo: () => 'abc' }), 'Choice: abc');
+      assert.equal(fn({ nested: () => 'inner' }), 'Choice: inner');
+    });
+
+    it('should not overwrite parent values with nested values', () => {
+      const ast = parse('Choice: ${1|${foo:${nested}}|}');
+      const node = ast.find('choices');
+      const fn = ast.compile();
+
+      assert.equal(fn({ foo: () => 'abc' }), 'Choice: abc');
+      assert.equal(fn({ nested: () => 'inner' }), 'Choice: inner');
+      assert.equal(fn({ foo: () => 'xyz' }), 'Choice: xyz');
+    });
+
+    it('should support functions that return array values', () => {
+      const ast = parse('Choice: ${1|${foo:${nested}},$array,$user|}');
+      const node = ast.find('choices');
+      const fn = ast.compile();
+
+      node.choose(1);
+      assert.equal(fn({ array: () => ['a', 'b', 'c'] }), 'Choice: a');
+
+      node.choose(3);
+      assert.equal(fn(), 'Choice: c');
+    });
+
+    it('should support non-string values with nested variables', () => {
+      const ast = parse('Choice: ${1|${foo:${array}}|}');
+      const node = ast.find('choices');
+      const fn = ast.compile();
+
+      assert.equal(fn({ array: () => ['a', 'b', 'c'] }), 'Choice: a');
+    });
+  });
+
   describe('transforms', () => {
     it('should work with transforms', () => {
       const input = [
@@ -91,16 +170,29 @@ describe('choices', () => {
       ].join('\n'));
 
       tabstop.set(0, 'AFTER');
+      node.choose(1);
 
       assert.equal(fn(), [
         'placeholder thing that',
-        'choice thing this',
+        'choice thing that',
         'transform placeholder 2',
-        'transform placeholder 1',
+        'transform placeholder 2',
         'AFTER'
       ].join('\n'));
 
       tabstop.set(1, 'other');
+      node.choose(2);
+
+      assert.equal(fn(), [
+        'placeholder thing other',
+        'choice thing other',
+        'transform placeholder 3',
+        'transform placeholder 3',
+        'AFTER'
+      ].join('\n'));
+
+      tabstop.set(1, 'other');
+      node.choose(0);
 
       assert.equal(fn(), [
         'placeholder thing other',

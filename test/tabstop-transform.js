@@ -85,12 +85,12 @@ describe('tabstop transforms', () => {
         flags: 'g'
       });
 
-      assert.deepEqual(params(transform('Foo ${1/(.)/${1:upcase}/g} Bar')), {
+      assert.deepEqual(params(transform('Foo ${1/(.)/${1:/upcase}/g} Bar')), {
         type: 'tabstop_transform',
-        string: '${1/(.)/${1:upcase}/g}',
+        string: '${1/(.)/${1:/upcase}/g}',
         varname: '1',
         regex: /(.)/g,
-        format: '${1:upcase}',
+        format: '${1:/upcase}',
         source: '(.)',
         flags: 'g'
       });

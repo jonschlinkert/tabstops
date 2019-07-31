@@ -96,9 +96,9 @@ describe('compile', () => {
       let data = { first: { name: 'Brian' } };
 
       assert.equal(compile('${first.name}', opts)(data), '${first.name}');
-      assert.equal(compile('$first.name', opts)(data), 'first.name');
       assert.equal(compile('foo ${first.name} bar', opts)(data), 'foo ${first.name} bar');
-      assert.equal(compile('foo $first.name bar', opts)(data), 'foo first.name bar');
+      assert.equal(compile('foo $first.name bar', opts)(data), 'foo [object Object].name bar');
+      assert.equal(compile('$first.name', opts)(data), '[object Object].name');
     });
 
     it('should render a variable using a value from the context', () => {
