@@ -20,6 +20,12 @@ describe('tabstop placeholders', () => {
       const node = ast.nodes[0];
       assert.equal(node.nodes[1].value, 'foo:bar');
     });
+
+    it('should work with empty placeholders', () => {
+      const ast = parse('${1:}');
+      const node = ast.nodes[0];
+      assert.equal(node.nodes[1].value, '');
+    });
   });
 
   describe('compile', () => {
