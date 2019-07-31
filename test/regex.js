@@ -9,9 +9,7 @@ const matcher = regex => {
     let m = regex.exec(input);
     if (m) {
       let arr = m.slice();
-      while (arr[arr.length - 1] === void 0) {
-        arr.pop();
-      }
+      while (arr[arr.length - 1] === void 0) arr.pop();
       return arr;
     }
     return null;
@@ -19,18 +17,6 @@ const matcher = regex => {
 };
 
 describe('constants - regular expressions', () => {
-  describe('INSERTION_REGEX', () => {
-    const match = matcher(INSERTION_REGEX);
-
-    it('should match insertions', () => {
-      assert.deepEqual(match('(?1:foo)'), ['(?1:foo)', '1', 'foo']);
-      assert.deepEqual(match('(?1:foo:bar)'), ['(?1:foo:bar)', '1', 'foo', 'bar']);
-      assert.deepEqual(match('(?1:foo:bar\\))'), ['(?1:foo:bar\\))', '1', 'foo', 'bar\\)']);
-      assert.deepEqual(match('(?1:foo\\)'), null);
-      assert.deepEqual(match('(?1:foo\\:bar)'), ['(?1:foo\\:bar)', '1', 'foo\\:bar']);
-    });
-  });
-
   describe('TRANSFORM_FORMAT_REGEX', () => {
     const match = matcher(TRANSFORM_FORMAT_REGEX);
 

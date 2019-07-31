@@ -154,9 +154,9 @@ const fs = require('fs');
 const survey = `
 Add some numbers:
   \${1:\${numbers}} \${2:\${items|Foo,Bar,Baz|}}
-  \${3|\$1|} \${2}
-  \${4|\$1|} \${2}
-  \${5|\$1|} \${2}
+  \${3|$1|} \${2}
+  \${4|$1|} \${2}
+  \${5|$1|} \${2}
 
   Total: \${total/^(.*)$/\${1:/currency}}
 `;

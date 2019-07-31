@@ -30,8 +30,9 @@ class Session extends Events {
     this.firsts = [];
     this.items = [];
 
-    this.invisible = new Set([].concat(this.options.invisible || []));
+    this.hidden = new Set([].concat(this.options.hidden || []));
     this.readonly = new Set([].concat(this.options.readonly || []));
+
     this.fields = this.snippet.fields;
     this.variables = this.snippet.values.variable;
     this.tabstops = this.snippet.values.tabstop;
@@ -85,8 +86,8 @@ class Session extends Events {
         output = field.call(item, output, this);
       }
 
-      if (this.invisible.has(item.key) && item.occurrence === 1) {
-        return '';
+      if (this.hidden.has(item.key) && item.occurrence === 1) {
+        return ''
       }
 
       if (this.closed) {
@@ -113,7 +114,7 @@ class Session extends Events {
       }
 
       if (item.type === 'choices') {
-        return colors.dim('⬍') + style(output);
+        // return colors.dim('⬍') + style(output);
       }
 
       return style(output);
@@ -205,8 +206,10 @@ class Session extends Events {
     for (let [, nodes] of map) {
       for (let i = 0; i < nodes.length; i++) {
         let node = nodes[i];
-        let count = node.occurrence = (occurrences.has(node.key) || 0) + 1;
+        let count = (occurrences.has(node.key) || 0) + 1;
         occurrences.set(node.key, count);
+
+        Reflect.defineProperty(node, 'occurrence', { value: count });
 
         if (this.readonly.has(node.key)) {
           continue;
@@ -265,7 +268,7 @@ class Session extends Events {
 
   recalculate(lines) {
     let { linenos, offset } = this;
-    // this.linenos = [...linenos.slice(-offset), ...linenos.slice(0, -offset)];
+    this.linenos = [...linenos.slice(-offset), ...linenos.slice(0, -offset)];
     return [...lines.slice(-offset), ...lines.slice(0, -offset)];
   }
 
@@ -317,11 +320,7 @@ class Session extends Events {
   }
 
   get line() {
-    let range = this.focused.loc.lines;
-    if (range[0] === range[1]) {
-      return this.lines[range[0]];
-    }
-    return this.lines.slice(...range);
+    return slice(this.lines, ...this.focused.loc.lines);
   }
 
   get llen() {
