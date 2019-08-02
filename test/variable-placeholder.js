@@ -84,7 +84,7 @@ describe('variable placeholders', () => {
   });
 
   describe('invalid variable placeholders', () => {
-    it.skip('should ignore invalid patterns', () => {
+    it('should ignore invalid patterns', () => {
       assert.doesNotThrow(() => assert.equal(...render('${name:value', '${name:value')));
       assert.doesNotThrow(() => assert.equal(...render('${1:bar${2:foobar}', '${1:barfoobar')));
     });

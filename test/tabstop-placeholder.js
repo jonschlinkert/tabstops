@@ -28,6 +28,15 @@ describe('tabstop placeholders', () => {
     });
   });
 
+  describe('mirrors', () => {
+    it('should work with mirrors', () => {
+      const input = '<${1:p}>$TM_SELECTED_TEXT</${1/\s.*//}>';
+      const ast = parse(input);
+      const fn = ast.compile();
+      assert.equal(fn(), '<p>TM_SELECTED_TEXT</p>');
+    });
+  });
+
   describe('compile', () => {
     let snippet, ast;
 
