@@ -2,8 +2,11 @@
 
 require('mocha');
 const assert = require('assert').strict;
+const Node = require('../lib/nodes/Node');
+
 const { parse, compile } = require('../lib/Parser');
 let tabstop;
+
 
 describe('compile', () => {
   describe('from vscode', () => {
@@ -31,9 +34,10 @@ describe('compile', () => {
     });
 
     it('Parser, variables/tabstop', () => {
-      let data = { TM_SELECTED_TEXT: '', far: '' };
+      let data = { TM_SELECTED_TEXT: null, far: null };
       assert.equal(compile('$far boo')(), 'far boo');
       assert.equal(compile('$far boo')(data), 'far boo');
+      assert.equal(compile('$far boo')({ far: '' }), 'far boo');
       assert.equal(compile('$far-boo')(), 'far-boo');
       assert.equal(compile('\\$far-boo')(), '\\$far-boo');
       assert.equal(compile('far$farboo')(), 'farfarboo');
@@ -63,15 +67,26 @@ describe('compile', () => {
     });
 
     it('should support dots in variables', () => {
-      let opts = { dotVariables: true };
+      let opts = { dot: true };
       assert.equal(compile('${first.name}', opts)(), 'first.name');
       assert.equal(compile('$first.name', opts)(), 'first.name');
+      assert.equal(compile('$first.name', opts)({ first: { name: 'Brian' } }), 'Brian');
+      assert.equal(compile('$first. name', opts)({ first: 'Brian' }), 'Brian. name');
       assert.equal(compile('foo ${first.name} bar', opts)(), 'foo first.name bar');
       assert.equal(compile('foo $first.name bar', opts)(), 'foo first.name bar');
     });
 
+    it('should support escaped dots', () => {
+      let opts = { dot: true };
+      let data = { 'first.name': 'Brian' };
+      assert.equal(compile('${first\\.name}', opts)(data), 'Brian');
+      assert.equal(compile('$first\\.name', opts)(data), 'Brian');
+      assert.equal(compile('foo ${first\\.name} bar', opts)(data), 'foo Brian bar');
+      assert.equal(compile('foo $first\\.name bar', opts)(data), 'foo Brian bar');
+    });
+
     it('should not support leading or trailing dots in variables', () => {
-      let opts = { dotVariables: true };
+      let opts = { dot: true };
       assert.equal(compile('$name.', opts)(), 'name.');
       assert.equal(compile('Name: $name.')({ name: 'Brian' }), 'Name: Brian.');
       assert.equal(compile('$.name', opts)(), '$.name');
@@ -82,7 +97,7 @@ describe('compile', () => {
     });
 
     it('should resolve nested variables', () => {
-      let opts = { dotVariables: true };
+      let opts = { dot: true };
       let data = { first: { name: 'Brian' } };
 
       assert.equal(compile('${first.name}', opts)(data), 'Brian');
@@ -91,8 +106,8 @@ describe('compile', () => {
       assert.equal(compile('foo $first.name bar', opts)(data), 'foo Brian bar');
     });
 
-    it('should not resolve nested variables when dotVariables is disabled', () => {
-      let opts = { dotVariables: false };
+    it('should not resolve nested variables when dot is disabled', () => {
+      let opts = { dot: false };
       let data = { first: { name: 'Brian' } };
 
       assert.equal(compile('${first.name}', opts)(data), '${first.name}');

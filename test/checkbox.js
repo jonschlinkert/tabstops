@@ -19,15 +19,15 @@ Favorite fruits?
   \${[x]:Apple}
   \${[ ]:Banana}
   \${[x]:Strawberry}
-  \${[]:Lemon}
-  \${[]:Watermelon:Pick this one}
+  \${[ ]:Lemon}
+  \${[ ]:Watermelon:Pick this one}
 `;
 
 let snippet = new Parser(str);
 let ast = snippet.parse();
 let fn = ast.compile();
 // console.log(ast.nodes[1]);
-console.log(fn(ctx));
+console.log(fn());
 
     });
   });

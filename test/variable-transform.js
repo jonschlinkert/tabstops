@@ -118,7 +118,7 @@ describe('variable transforms', () => {
 
     for (let fixture of fixtures) {
       it(fixture.it || 'should parse ' + fixture.input, () => {
-        assert.equal(render(fixture.input, data), fixture.expected);
+        assert.equal(render(fixture.input, data), fixture.expected, fixture.input);
       });
     }
 
@@ -189,11 +189,47 @@ describe('variable transforms', () => {
       assert.equal(node.transform('FOOOOOO'), 'FOOOOOO');
     });
 
-    it('should use downcase helper', () => {
-      const input = '${TM_FILENAME/([A-Z_]+)/${1:/downcase}/}';
+    it('should use upcase helper', () => {
+      const input = '${whatever/([a-z_]+)/${1:/upcase}/}';
       const node = transform(input);
-      assert.equal(node.transform('TM_FILENAME'), 'tm_filename');
-      assert.equal(node.transform('foo'), 'foo');
+      assert.equal(node.transform('blah'), 'BLAH');
+      assert.equal(node.transform('foo'), 'FOO');
+    });
+
+    it('should use downcase helper', () => {
+      const input = '${WHATEVER/([A-Z_]+)/${1:/downcase}/}';
+      const node = transform(input);
+      assert.equal(node.transform('WHATEVER'), 'whatever');
+      assert.equal(node.transform('FOO'), 'foo');
+    });
+
+    it('should use uppercase helper', () => {
+      const input = '${whatever/([a-z_]+)/${1:/uppercase}/}';
+      const node = transform(input);
+      assert.equal(node.transform('blah'), 'BLAH');
+      assert.equal(node.transform('foo'), 'FOO');
+    });
+
+    it('should use lowercase helper', () => {
+      const input = '${WHATEVER/([A-Z_]+)/${1:/lowercase}/}';
+      const node = transform(input);
+      assert.equal(node.transform('WHATEVER'), 'whatever');
+      assert.equal(node.transform('FOO'), 'foo');
+    });
+
+    it('should use capitalize helper', () => {
+      const input = '${whatever/([a-zA-Z_]+)/${1:/capitalize}/g}';
+      const node = transform(input);
+      assert.equal(node.transform('one two three'), 'One Two Three');
+      assert.equal(node.transform('foo'), 'Foo');
+    });
+
+    it('should use pascalcase helper', () => {
+      const input = '${whatever/([-a-zA-Z_ ]+)/${1:/pascalcase}/g}';
+      const node = transform(input);
+      assert.equal(node.transform('foo bar baz'), 'FooBarBaz');
+      assert.equal(node.transform('foo-bar-baz'), 'FooBarBaz');
+      assert.equal(node.transform('FOO'), 'Foo');
     });
   });
 

@@ -1,0 +1,33 @@
+{
+  "name": "${1:name}",
+  "file": "${TM_FILENAME/(\\/[^/]*?)$/$1/}",
+  "file2": "${TM_FILENAME/(\\/[^/]*?)$/${1:/upcase}/i}",
+  "file3": "${TM_FILENAME/.*\\/([^/]*?)$/${1:/upcase}/ig}",
+  "file4": "${TM_FILENAME/(.*)/$1/g}",
+  "description": "${2:${description:'My amazing new project.'}}",
+  "version": "${3:${version:0.1.0}}",
+  "repository": "${4:${owner}}/${name}",
+  "choose": "${5|foo,bar,baz|}",
+  "mirror": "${5}",
+  "mirror2": "$5",
+  "homepage": "https://github.com/${owner}/${name}",
+  "author": "${fullname} (https://github.com/${username})",
+  "bugs": {
+    "url": "https://github.com/${owner}/${name}/issues"
+  },
+  "main": "index.js",
+  "engines": {
+    "node": ">=${engine:10}"
+  },
+  "license": "${license:MIT}",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": "${keywords}",
+  "helper": "${1/^(.*)$/${1:/helper}}",
+  "choices": "${1|${sllssl:${home}},$array,$user|}",
+  "choices2": "${2|$array,${sllssl:${home}},$user|}",
+  "choices3": "${3|${sllssl:${home}},${array},$user|}",
+  "choices4": "${2|$array|}",
+  "choices5": "${choices}"
+}
