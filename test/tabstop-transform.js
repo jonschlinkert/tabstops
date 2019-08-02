@@ -4,10 +4,11 @@ require('mocha');
 const path = require('path');
 const assert = require('assert').strict;
 const { parse, render } = require('../lib/Parser');
+
 const data = {
-  TM_DIRECTORY: __dirname,
+  TM_DIRECTORY: '/Users/jonschlinkert/dev/snippet/tabstops/test',
   TM_FILENAME: 'parse.js',
-  TM_FILEPATH: path.join(__dirname, 'parse.js')
+  TM_FILEPATH: '/Users/jonschlinkert/dev/snippet/tabstops/test/parse.js'
 };
 
 const transforms = type => {

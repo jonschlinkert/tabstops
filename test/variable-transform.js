@@ -4,11 +4,11 @@ require('mocha');
 const path = require('path');
 const assert = require('assert').strict;
 const { parse, render } = require('../lib/Parser');
-const posix = str => str.split('\\').join('/');
+
 const data = {
-  TM_DIRECTORY: posix(__dirname),
+  TM_DIRECTORY: '/Users/jonschlinkert/dev/snippet/tabstops/test',
   TM_FILENAME: 'parse.js',
-  TM_FILEPATH: path.posix.join(posix(__dirname), 'parse.js')
+  TM_FILEPATH: '/Users/jonschlinkert/dev/snippet/tabstops/test/parse.js'
 };
 
 const transforms = type => {
@@ -123,7 +123,7 @@ describe('variable transforms', () => {
     }
 
     it('should respect escaped forward slashes in transform regex', () => {
-      assert.equal(render('${TM_DIRECTORY/test[\\\\/]/$1/}', data), 'TM_DIRECTORY');
+      assert.equal(render('${TM_DIRECTORY/test[\\\\/]/$1/}', data), '/Users/jonschlinkert/dev/snippet/tabstops/test');
       assert.equal(render('${TM_FILEPATH/.*[\\\\/]test[\\\\/](.*)$/$1/}', data), 'parse.js');
     });
 
@@ -186,14 +186,14 @@ describe('variable transforms', () => {
       const input = '${ThisIsAVar/([A-Z]).*(Var)/$2-${1:/downcase}/}';
       const node = transform(input);
       assert.equal(node.transform('ThisIsAVar'), 'Var-t');
-      assert.equal(node.transform('FOOOOOO'), '');
+      assert.equal(node.transform('FOOOOOO'), 'FOOOOOO');
     });
 
     it('should use downcase helper', () => {
       const input = '${TM_FILENAME/([A-Z_]+)/${1:/downcase}/}';
       const node = transform(input);
       assert.equal(node.transform('TM_FILENAME'), 'tm_filename');
-      assert.equal(node.transform('foo'), '');
+      assert.equal(node.transform('foo'), 'foo');
     });
   });
 
