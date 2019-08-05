@@ -126,6 +126,13 @@ describe('choices', () => {
       assert.equal(fn({ files: () => ['a', 'b', 'c'] }), 'Choice: a');
     });
 
+    it('should support dynamically adding choices from nested variables #2', () => {
+      const ast = parse('Choice: ${1|foo,${files}|}');
+      const node = ast.find('choices');
+      const fn = ast.compile();
+      assert.equal(fn({ files: () => ['a', 'b', 'c'] }), 'Choice: foo');
+    });
+
     it('should allow choices to be added from nested variables', () => {
       const ast = parse('Choice: ${3|${foo:${bar:${files}}},${array},$user|}');
       const node = ast.find('choices');

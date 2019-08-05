@@ -12,4 +12,8 @@ Favorite fruits?
   \${( ):Watermelon:Pick this one}
 `;
 
-prompt(str);
+prompt(str, {
+  onClose() {
+    console.log(this.parser);
+  }
+});
