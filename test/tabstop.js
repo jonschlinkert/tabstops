@@ -54,7 +54,7 @@ describe('tabstops', () => {
         let parser = new Parser(fixture[0]);
         let ast = parser.parse();
 
-        parser.values.tabstop.set(1, 'ENTERED');
+        parser.tabstops.set(1, 'ENTERED');
 
         let fn = ast.compile();
         assert.equal(fn(), fixture[1]);

@@ -9,16 +9,16 @@ class Session extends Events {
   constructor(string, options) {
     super();
     this.options = options || {};
-    this.snippet = new Parser(string, options);
+    this.parser = new Parser(string, options);
     this.firsts = [];
     this.items = [];
 
     this.hidden = new Set([].concat(this.options.hidden || []));
     this.readonly = new Set([].concat(this.options.readonly || []));
 
-    this.fields = this.snippet.fields;
-    this.variables = this.snippet.values.variable;
-    this.tabstops = this.snippet.values.tabstop;
+    this.fields = this.parser.fields;
+    this.variables = this.parser.variables;
+    this.tabstops = this.parser.tabstops;
     this.display = this.options.display;
 
     this.lines = string.split('\n');
@@ -40,7 +40,7 @@ class Session extends Events {
     }
 
     if (this.options.decorate) {
-      this.snippet.on('field', item => {
+      this.parser.on('field', item => {
         item.cursor = 0;
         item.input = '';
         item.output = '';
@@ -180,7 +180,7 @@ class Session extends Events {
   }
 
   addItems() {
-    let { tabstop, variable, zero } = this.snippet.fields;
+    let { tabstop, variable, zero } = this.parser.fields;
 
     this.pushFields(utils.sortMap(tabstop));
     this.pushFields(variable);
@@ -239,7 +239,7 @@ class Session extends Events {
 
   parse(...args) {
     delete this.fn;
-    this.ast = this.snippet.parse();
+    this.ast = this.parser.parse();
     this.addItems();
     return this.ast;
   }
@@ -325,6 +325,22 @@ class Session extends Events {
       return item.stringify();
     }
 
+    return value;
+  }
+
+  tabstop(n, value) {
+    if (value === void 0) {
+      return this.tabstops.get(n);
+    }
+    this.tabstops.set(n, value);
+    return value;
+  }
+
+  variable(name, value) {
+    if (value === void 0) {
+      return this.variables.get(name);
+    }
+    this.variables.set(name, value);
     return value;
   }
 

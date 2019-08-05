@@ -18,9 +18,9 @@ describe('Formula fields', () => {
       let ast = snippet.parse();
       let fn = ast.compile();
       console.log(fn(ctx));
-      console.log([snippet.get('item1')]); //=> 91.5
-      console.log([snippet.get('item2')]); //=> 10
-      console.log([snippet.get('total')]); //=> 101.5
+      console.log([snippet.variables.get('item1')]); //=> 91.5
+      console.log([snippet.variables.get('item2')]); //=> 10
+      console.log([snippet.variables.get('total')]); //=> 101.5
 
       console.log(formula('${total=one + 3}').compile()({ one: 1 }));
       console.log(formula('${total=1 / 3}').compile()());

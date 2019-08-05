@@ -10,7 +10,7 @@ const render = (input, data, stop) => {
   let fn = ast.compile();
 
   if (Array.isArray(stop)) {
-    session.snippet.values.tabstop.set(...stop);
+    session.parser.tabstops.set(...stop);
   }
 
   return fn(data);
@@ -23,7 +23,7 @@ const create = (input, options) => {
 
   return {
     set(...args) {
-      session.snippet.values.tabstop.set(...args);
+      session.parser.tabstops.set(...args);
     },
     render(data) {
       return fn(data);

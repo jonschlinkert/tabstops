@@ -17,7 +17,8 @@ const parse = input => {
     delete node.match;
     delete node.compile;
     delete node.source;
-    delete node.values;
+    delete node.variables;
+    delete node.tabstops;
     delete node.initial;
   });
 
