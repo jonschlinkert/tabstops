@@ -103,6 +103,45 @@ describe('choices', () => {
       assert.equal(fn({ foo: () => 'ghi' }), 'Choice: ghi');
     });
 
+    it('should support nested variables in choices', () => {
+      const ast = parse('Choice: ${3|${foo:${path:${home}}},${array},$user|}');
+      const node = ast.find('choices');
+      const data = {
+        home: '~/someuser',
+        user: process.env.USER,
+        files: () => ['a', 'b', 'c'],
+        array() {
+          return ['one', 'two', 'three'];
+        }
+      };
+
+      const fn = ast.compile();
+      assert.equal(fn(data), 'Choice: ~/someuser');
+    });
+
+    it('should support dynamically adding choices from nested variables', () => {
+      const ast = parse('Choice: ${1|${files},foo|}');
+      const node = ast.find('choices');
+      const fn = ast.compile();
+      assert.equal(fn({ files: () => ['a', 'b', 'c'] }), 'Choice: a');
+    });
+
+    it('should allow choices to be added from nested variables', () => {
+      const ast = parse('Choice: ${3|${foo:${bar:${files}}},${array},$user|}');
+      const node = ast.find('choices');
+      const data = {
+        home: '~/someuser',
+        user: process.env.USER,
+        files: () => ['a', 'b', 'c'],
+        array() {
+          return ['one', 'two', 'three'];
+        }
+      };
+
+      const fn = ast.compile();
+      assert.equal(fn(data), 'Choice: a');
+    });
+
     it('should support functions on nested variables', () => {
       const ast = parse('Choice: ${1|${foo:${nested}},$array,$user|}');
       const node = ast.find('choices');
@@ -140,6 +179,24 @@ describe('choices', () => {
       const fn = ast.compile();
 
       assert.equal(fn({ array: () => ['a', 'b', 'c'] }), 'Choice: a');
+    });
+
+    it('should mirror choices on previous tabstops', () => {
+      const input = 'Choose something: ${1:$2} ${2|Foo,Bar,Baz|}';
+      const ast = parse(input);
+      const node = ast.find('choices');
+      const fn = ast.compile();
+
+      assert.equal(fn(), 'Choose something: Foo Foo');
+    });
+
+    it('should mirror nested choices on previous tabstops', () => {
+      const input = 'Choose something: ${1:$3} ${2:${3|Foo,Bar,Baz|}}';
+      const ast = parse(input);
+      const node = ast.find('choices');
+      const fn = ast.compile();
+
+      assert.equal(fn(), 'Choose something: Foo Foo');
     });
   });
 

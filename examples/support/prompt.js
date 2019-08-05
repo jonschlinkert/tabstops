@@ -59,16 +59,15 @@ const prompt = (input, options = {}) => {
     } else if (event.name === 'right') {
       session.right();
     } else if (event.name === 'up') {
-      session[event.shift ? 'shiftup' : 'up']();
+      session[event.shift === true ? 'shiftup' : 'up']();
     } else if (event.name === 'down') {
-      session[event.shift ? 'shiftdown' : 'down']();
+      session[event.shift === true ? 'shiftdown' : 'down']();
     } else {
       if (event.name === 'backspace' || event.name === 'delete') {
         item.input = item.input.slice(0, -1);
       } else {
         item.input += input;
       }
-
       session.values.set(item.key, colors.unstyle(item.input));
     }
 

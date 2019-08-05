@@ -40,6 +40,20 @@ const prompt = (input, options = {}) => {
   rl.on('SIGINT', close);
   rl.on('line', close);
   rl.input.on('keypress', (input, event) => {
+    let item = session.focused;
+    let type = item.type;
+
+    if (type === 'checkbox' || type === 'radio') {
+      if (event.name === 'up' || event.name === 'down') {
+        event.shift = event.name === 'up';
+        event.name = 'tab';
+      }
+
+      if (typeof item[event.name] === 'function') {
+        item[event.name]();
+      }
+    }
+
     if (event.name === 'y' && event.ctrl === true) {
       session.togglePlaceholders();
     } else if (event.code === '[5~') {
@@ -57,8 +71,6 @@ const prompt = (input, options = {}) => {
     } else if (event.name === 'down') {
       session[event.shift ? 'shiftdown' : 'down']();
     } else {
-      let item = session.focused;
-
       if (event.name === 'backspace' || event.name === 'delete') {
         item.input = item.input.slice(0, -1);
       } else {

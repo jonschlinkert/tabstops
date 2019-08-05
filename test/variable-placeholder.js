@@ -4,10 +4,10 @@ require('mocha');
 const assert = require('assert').strict;
 const { compile, parse } = require('../lib/Parser');
 
-const render = (input, expected) => {
+const render = (input, expected, data) => {
   const ast = parse(input);
   const fn = ast.compile();
-  return [fn(), expected];
+  return [fn(data), expected];
 };
 
 describe('variable placeholders', () => {
@@ -18,7 +18,7 @@ describe('variable placeholders', () => {
       assert.equal(node.nodes[1].value, 'foo:bar');
     });
 
-    it('should work with empty placeholders', () => {
+    it('should support placeholders', () => {
       const ast = parse('${name:}');
       const node = ast.nodes[0];
       assert.equal(node.emptyPlaceholder, true);
@@ -76,6 +76,22 @@ describe('variable placeholders', () => {
       assert.equal(...render('${name:value}', 'value'));
       assert.equal(...render('${1:value}', 'value'));
       assert.equal(...render('${1:bar${2:foo}bar}', 'barfoobar'));
+    });
+
+    it('should support nested varables as placeholders', () => {
+      assert.equal(...render('${name:${foo}}', 'foo'));
+      assert.equal(...render('${name:${foo:bar}}', 'bar'));
+      assert.equal(...render('${name:${foo:${bar}}}', 'bar'));
+      assert.equal(...render('${name:${foo:$bar}}', 'bar'));
+      assert.equal(...render('${name:${foo:${bar:$baz}}}', 'qux', { baz: 'qux' }));
+    });
+
+    it('should support nested tabstops as placeholders', () => {
+      assert.equal(...render('${name:${1}}', 'name'));
+      assert.equal(...render('${name:${1:bar}}', 'bar'));
+      assert.equal(...render('${name:${1:${bar}}}', 'bar'));
+      assert.equal(...render('${name:${1:$bar}}', 'bar'));
+      assert.equal(...render('${name:${1:${bar:$baz}}}', 'qux', { baz: 'qux' }));
     });
 
     it('should not use placeholders defined on previous same-name vars', () => {

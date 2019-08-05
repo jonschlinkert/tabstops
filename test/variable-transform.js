@@ -59,12 +59,20 @@ describe('variable transforms', () => {
       assert.equal(node.transform('FooFile.js'), 'FooFile');
     });
 
-    it('should transform input using transform formats - #8', () => {
+    it('should transform input with if-else transforms', () => {
       const input = '${TM_LINE_NUMBER/(10)/${1:?It is:It is not}/} line 10';
       const node = transform(input);
       assert.equal(node.transform(10), 'It is');
       assert.equal(node.transform('TM_LINE_NUMBER'), 'It is not');
       assert.equal(node.transform('foo'), 'It is not');
+    });
+
+    it('should ignore if-else when a condition is missing', () => {
+      const input = '${TM_LINE_NUMBER/(10)/${1:?It is}/} line 10';
+      const node = transform(input);
+      assert.equal(node.transform(10), 'It is');
+      assert.equal(node.transform('TM_LINE_NUMBER'), 'TM_LINE_NUMBER');
+      assert.equal(node.transform('foo'), 'foo');
     });
   });
 
@@ -187,6 +195,13 @@ describe('variable transforms', () => {
       const node = transform(input);
       assert.equal(node.transform('ThisIsAVar'), 'Var-t');
       assert.equal(node.transform('FOOOOOO'), 'FOOOOOO');
+    });
+
+    it('should ignore unknown helpers', () => {
+      const input = '${whatever/([a-z_]+)/${1:/unknown}/}';
+      const node = transform(input);
+      assert.equal(node.transform('blah'), 'blah');
+      assert.equal(node.transform('foo'), 'foo');
     });
 
     it('should use upcase helper', () => {
