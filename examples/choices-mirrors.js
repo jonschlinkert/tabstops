@@ -11,15 +11,13 @@ prompt(`
 
   actions: {
     // left() {
-    //   if (!this.focused.choices) return;
-    //   if (this.focused.cursor > 0) {
-    //     this.focused.cursor--;
+    //   if (this.focused.choices) {
+    //     this.focused.prev();
     //   }
     // },
     // right() {
-    //   if (!this.focused.choices) return;
-    //   if (this.focused.cursor < this.focused.choices.length - 1) {
-    //     this.focused.cursor++;
+    //   if (this.focused.choices) {
+    //     this.focused.next();
     //   }
     // },
     // prev() {
@@ -32,7 +30,7 @@ prompt(`
     //   if (this.index < this.length - 1) {
     //     this.index++;
     //   }
-    // }
+    // },
     // up() {
     //   return this.prev();
     // },

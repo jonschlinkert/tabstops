@@ -1,5 +1,6 @@
 'use strict';
 
+const keypress = require('enquirer/lib/keypress');
 const readline = require('readline');
 const update = require('log-update');
 const escapes = require('ansi-escapes');
@@ -21,7 +22,7 @@ const prompt = (input, options = {}) => {
 
     if (options.onClose) {
       setImmediate(() => {
-        options.onClose.call(session, result, session);
+        options.onClose.call(session, colors.unstyle(result), session);
       });
     }
   };
@@ -35,8 +36,10 @@ const prompt = (input, options = {}) => {
 
   rl.on('SIGINT', close);
   rl.on('line', close);
+
   rl.input.on('keypress', (input, event) => {
     if (!session.focused) return;
+    let action = keypress.action(input, event);
     let item = session.focused;
     let type = item.type;
 
@@ -91,6 +94,7 @@ const prompt = (input, options = {}) => {
       }
 
       item.input = item.input.replace(/\r/g, '');
+      item.input = item.input.replace(/\\?"/g, '\\"');
       session.values.set(item.key, colors.unstyle(item.input));
     }
 

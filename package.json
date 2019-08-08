@@ -1,6 +1,6 @@
 {
   "name": "tabstops",
-  "description": "JavaScript library and API for parsing, compiling and rendering snippets with tabstops.",
+  "description": "Add tabstop support to any editor or CLI. Tabstops is a JavaScript library and API for parsing, compiling and rendering snippets with tabstops.",
   "version": "0.1.2",
   "homepage": "https://github.com/jonschlinkert/tabstops",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -21,12 +21,27 @@
     "cover": "nyc --reporter=text --reporter=html mocha"
   },
   "keywords": [
+    "code",
+    "compile",
+    "editor",
+    "enquirer",
+    "parse",
+    "productivity",
+    "render",
+    "prompt",
+    "snippet",
+    "snippets",
+    "sublime text",
+    "sublime",
+    "sublime-text",
     "tabstop",
+    "text editor",
+    "text-editor",
+    "vscode",
     "tabstops"
   ],
   "dependencies": {
-    "ansi-colors": "^4.1.1",
-    "enquirer": "file:../../@enquirer/enquirer-3.0.0"
+    "ansi-colors": "^4.1.1"
   },
   "devDependencies": {
     "gulp-format-md": "^2.0.0",

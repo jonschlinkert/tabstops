@@ -94,8 +94,17 @@ describe('variable placeholders', () => {
       assert.equal(...render('${name:${1:${bar:$baz}}}', 'qux', { baz: 'qux' }));
     });
 
-    it('should not use placeholders defined on previous same-name vars', () => {
-      assert.equal(...render('${foo:bar} $foo', 'bar foo'));
+    it('should not mirror placeholders', () => {
+      // assert.equal(...render('${foo:bar} $foo', 'bar foo'));
+      // assert.equal(...render('${foo:bar} $foo', 'bar bar'));
+      // assert.equal(...render('${foo:${bar}} $foo', 'bar bar'));
+      // assert.equal(...render('${foo:${bar:}} $foo', 'bar bar'));
+      // assert.equal(...render('${foo:${bar}} ${foo:}', 'bar bar'));
+      assert.equal(...render('${foo:} ${foo:}', ' '));
+      assert.equal(...render('${foo:} ${foo}', ' foo'));
+      assert.equal(...render('${foo} ${foo:}', 'foo '));
+      assert.equal(...render('${foo:bar} ${1:foo}', 'bar foo'));
+      assert.equal(...render('${1:${foo:bar}} ${1:foo}', 'bar foo'));
     });
   });
 

@@ -3,22 +3,29 @@
 const Events = require('events');
 const colors = require('ansi-colors');
 const Parser = require('./lib/Parser');
+const Radio = require('./lib/nodes/Radio');
 const utils = require('./lib/utils');
+const variables = require('./lib/variables');
 
-const bind = (target, provider = {}) => {
-  for (let key of Object.keys(provider)) {
-    target[key] = provider[key].bind(target);
+const indentation = value => {
+  if (typeof value === 'string') {
+    return value;
   }
+  if (typeof value === 'number') {
+    return ' '.repeat(value);
+  }
+  return '';
 };
 
-const field = (key, options = {}) => {
-  let identity = state => state.value;
-  let value = options[key];
-  let defaults = { format: identity, results: identity, validate: () => true };
-  if (typeof value === 'function') {
-    value = { format: value };
+const indent = (input, amount, skipFirst = false) => {
+  let prefix = indentation(amount);
+  if (!prefix) return input;
+  let lines = input.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    if (skipFirst === true && i === 0) continue;
+    lines[i] = prefix + lines[i];
   }
-  return { ...defaults, ...value };
+  return lines.join('\n');
 };
 
 const actions = {
@@ -59,10 +66,18 @@ const actions = {
 };
 
 class Session extends Events {
-  constructor(string, options) {
+  constructor(input, options) {
     super();
-    this.options = options || {};
-    this.parser = new Parser(string, options);
+    this.options = { ...options };
+
+    if (this.options.variables !== false) {
+      this.options.data = variables(this.options);
+    }
+
+    let string = indent(input, this.options.indent);
+    this.parser = new Parser(string, this.options);
+    this.tabstops = this.parser.tabstops;
+    this.variables = this.parser.variables;
 
     this.hidden = new Set([].concat(this.options.hidden || []));
     this.readonly = new Set([].concat(this.options.readonly || []));
@@ -92,14 +107,14 @@ class Session extends Events {
       this.parser.on('field', item => this.decorate(item));
     }
 
-    bind(this, this.options.actions);
+    utils.bind(this, this.options.actions);
   }
 
   decorate(item) {
     let fields = this.options.fields;
 
     if (!this.fields.has(item.key)) {
-      this.fields.set(item.key, field(item.key, fields));
+      this.fields.set(item.key, utils.field(item.key, fields));
     }
     if (fields && fields[item.type] && !this.fields.has(item.type)) {
       this.fields.set(item.type, fields && fields[item.type]);
@@ -109,12 +124,39 @@ class Session extends Events {
     item.input = '';
     item.output = '';
     item.items = this.items;
-    item.session = this;
+    utils.define(item, 'session', this);
     item.format = (...args) => this.format(item, ...args);
     this.emit('field', item);
   }
 
+  set(type, key, value) {
+    this[type].set(key, value);
+    return this;
+  }
+
+  checkboxes(fn) {
+    let results = [];
+    for (let [key, boxes] of this.parser.fields.variable) {
+      for (let item of boxes) {
+        let { type, group, enabled, name, message } = item;
+        if (type === 'checkbox') {
+          results.push({ group, name, message, enabled });
+          if (typeof fn === 'function') {
+            fn(item);
+          }
+        }
+      }
+    }
+    return results;
+  }
+
+  indent(input, value) {
+    return indent(input, indentation(value), true);
+  }
+
   format(item, state, history) {
+    if (this.closed === true) return state.value;
+
     let type = this.fields.get(item.type);
     let field = this.fields.get(item.key);
     let { from, value } = state;
@@ -129,15 +171,13 @@ class Session extends Events {
 
     state.value = field.format.call(item, state, this);
 
-    if (this.options.format) {
-      return this.options.format.call(item, state, this);
+    if (this.options.render) {
+      return this.options.render(item, state, this);
     }
 
     if (item.type === 'radio' && item.group && item.enabled) {
       state.value = colors.cyan(state.value);
     }
-
-    // field.format(output);
 
     // let fields = this.options.fields || {};
     // let field = fields[item.key] || fields[item.type];
@@ -151,13 +191,17 @@ class Session extends Events {
     // }
 
     // if (item === this.focused && (state.from === 'tabstop' || state.from === 'variable')) {
-
-
-    if (from.endsWith('placeholder') && state.value === value) {
+    let placeholder = false;
+    if (item.textPlaceholder && item.textPlaceholder() === state.value) {
       state.value = colors.dim(state.value);
-    } else if (item === this.focused) {
-      // output = colors.underline(output);
-      state.value = colors.cyan(state.value);
+      placeholder = true;
+    }
+
+    if (item === this.focused && !(item instanceof Radio)) {
+      state.value = colors.underline(state.value);
+      if (!placeholder) {
+        state.value = colors.cyan(state.value);
+      }
     }
 
     return state.value;
@@ -304,13 +348,45 @@ class Session extends Events {
     this.index = (this.index + 1) % this.length;
   }
 
+  forward() {
+    let item = this.focused;
+    let { input, cursor } = this.focused;
+
+    if (!input || cursor + 1 > input.length) {
+      this.emit('alert');
+      return;
+    }
+
+    this.focused.cursor++;
+  }
+
+  backward() {
+    let item = this.focused;
+    let { input, cursor } = this.focused;
+
+    if (!input || cursor - 1 < 0) {
+      this.emit('alert');
+      return;
+    }
+
+    this.focused.cursor--;
+  }
+
   left() {
-    this.focused.cursor = Math.max(0, this.focused.cursor - 1);;
+    if (this.focused.type === 'choices') {
+      this.focused.prevChoice();
+      return;
+    }
+
+    this.backward();
   }
 
   right() {
-    let item = this.focused;
-    item.cursor = Math.min(item.cursor + 1, item.input.length);
+    if (this.focused.type === 'choices') {
+      this.focused.nextChoice();
+      return;
+    }
+    this.forward();
   }
 
   shiftup() {
@@ -437,19 +513,15 @@ class Session extends Events {
   render(data, options) {
     this.fn = this.compile(options);
     let output = this.fn(data);
-    let lines = output.split('\n');
+    return output;
+    // let lines = output.split('\n');
 
-    if (this.offset !== 0) {
-      lines = this.recalculate(lines);
-    }
-
-    // if (!this.cursorIsVisible()) {
-    //   this.shiftdown();
-    //   return this.render(data);
+    // if (this.offset !== 0) {
+    //   lines = this.recalculate(lines);
     // }
 
-    let visible = lines.slice(0, this.visible);
-    return visible.join('\n');
+    // let visible = lines.slice(0, this.visible);
+    // return visible.join('\n');
   }
 
   renderResult(data) {
@@ -485,49 +557,27 @@ class Session extends Events {
     this.mode = this.mode < 4 ? this.mode + 1 : 0;
   }
 
-  showPlaceholders(item, value) {
-    let style = colors[item.kind === 'tabstop' ? 'blue' : 'green'];
-    if (item.type === 'choices') {
-      style = colors.yellow;
-    }
-
-    if (this.mode === 1 && item.kind === 'tabstop') {
-      return style(item.stringify());
-    }
-
-    if (this.mode === 2 && item.kind === 'variable') {
-      return style(item.stringify());
-    }
-
-    if (this.mode === 3) {
-      return style(item.stringify());
-    }
-
-    if (this.mode === 4) {
-      return item.stringify();
-    }
-
-    return value;
-  }
-
   tabstop(n, value) {
-    if (value === void 0) {
-      return this.parser.tabstops.get(n);
-    }
-    this.parser.tabstops.set(n, value);
-    return value;
+    // if (value === void 0) {
+    //   return this.tabstops.get(n);
+    // }
+    // this.tabstops.set(n, value);
+    // return value;
+    return this.parser.tabstop(n, value);
   }
 
   variable(name, value) {
-    if (value === void 0) {
-      return this.parser.variables.get(name);
-    }
-    this.parser.variables.set(name, value);
-    return value;
+    // if (value === void 0) {
+    //   return this.variables.get(name);
+    // }
+    // this.variables.set(name, value);
+    // return value;
+    return this.parser.variable(name, value);
   }
 
   focus(value) {
     this.index = this.firsts.findIndex(n => n === value || n.key === value);
+    return this;
   }
 
   get group() {
@@ -535,7 +585,7 @@ class Session extends Events {
   }
 
   get values() {
-    return this.focused.kind === 'tabstop' ? this.parser.tabstops : this.parser.variables;
+    return this.focused.kind === 'tabstop' ? this.tabstops : this.variables;
   }
 
   get line() {
